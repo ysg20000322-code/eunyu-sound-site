@@ -1,0 +1,608 @@
+<title>서은유 — Sound Designer · Foley Artist</title>
+<style>
+  :root {
+    --bg: #eceef2;
+    --bg-elevated: #ffffff;
+    --ink: #171a21;
+    --ink-soft: #565d6b;
+    --ink-faint: #8891a0;
+    --line: #cdd2db;
+    --brass: #b17a2e;
+    --cyan: #2f7f7d;
+    --shadow: 0 1px 2px rgba(23, 26, 33, 0.06), 0 8px 24px rgba(23, 26, 33, 0.05);
+    color-scheme: light;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #10131a;
+      --bg-elevated: #171b24;
+      --ink: #eef0f4;
+      --ink-soft: #9aa1b0;
+      --ink-faint: #656d7c;
+      --line: #2a2f3b;
+      --brass: #d9a154;
+      --cyan: #5fb3b1;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 32px rgba(0, 0, 0, 0.35);
+      color-scheme: dark;
+    }
+  }
+
+  :root[data-theme="light"] {
+    --bg: #eceef2;
+    --bg-elevated: #ffffff;
+    --ink: #171a21;
+    --ink-soft: #565d6b;
+    --ink-faint: #8891a0;
+    --line: #cdd2db;
+    --brass: #b17a2e;
+    --cyan: #2f7f7d;
+    --shadow: 0 1px 2px rgba(23, 26, 33, 0.06), 0 8px 24px rgba(23, 26, 33, 0.05);
+    color-scheme: light;
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #10131a;
+    --bg-elevated: #171b24;
+    --ink: #eef0f4;
+    --ink-soft: #9aa1b0;
+    --ink-faint: #656d7c;
+    --line: #2a2f3b;
+    --brass: #d9a154;
+    --cyan: #5fb3b1;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 32px rgba(0, 0, 0, 0.35);
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--ink);
+    overflow-x: hidden;
+  }
+
+  body {
+    font-family: "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+    transition: background 0.3s ease, color 0.3s ease;
+  }
+
+  .serif {
+    font-family: "Nanum Myeongjo", Batang, "Apple SD Gothic Neo", serif;
+  }
+
+  .mono {
+    font-family: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+  }
+
+  a { color: inherit; }
+
+  .page {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 0 28px 120px;
+  }
+
+  /* ---------- hero ---------- */
+
+  .hero {
+    padding: 72px 0 44px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .hero__eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    margin-bottom: 22px;
+  }
+
+  .hero__dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--brass);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--brass) 22%, transparent);
+  }
+
+  .hero__name {
+    font-size: clamp(38px, 7vw, 58px);
+    font-weight: 700;
+    margin: 0 0 8px;
+    text-wrap: balance;
+    letter-spacing: -0.01em;
+  }
+
+  .hero__role {
+    font-size: 17px;
+    color: var(--ink-soft);
+    margin: 0 0 34px;
+  }
+
+  .hero__role b {
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  .wave {
+    display: block;
+    width: 100%;
+    height: 96px;
+    border-radius: 3px;
+  }
+
+  .hero__meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-top: 14px;
+    font-size: 12px;
+    color: var(--ink-faint);
+  }
+
+  .hero__meta .mono {
+    color: var(--ink-soft);
+    font-size: 13px;
+  }
+
+  /* ---------- section shell ---------- */
+
+  section.block {
+    padding: 56px 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  section.block:last-of-type {
+    border-bottom: none;
+  }
+
+  .block__label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--brass);
+    margin: 0 0 18px;
+    font-weight: 600;
+  }
+
+  .block__heading {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0 0 20px;
+    text-wrap: balance;
+  }
+
+  /* ---------- about ---------- */
+
+  .about__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .about p {
+    margin: 0 0 16px;
+    color: var(--ink-soft);
+    max-width: 62ch;
+  }
+
+  .about p:last-child { margin-bottom: 0; }
+
+  blockquote.pull {
+    margin: 8px 0 0;
+    padding: 4px 0 4px 18px;
+    border-left: 2px solid var(--brass);
+    font-family: "Nanum Myeongjo", Batang, serif;
+    font-size: 19px;
+    color: var(--ink);
+    font-style: normal;
+  }
+
+  /* ---------- work / track list ---------- */
+
+  .track {
+    display: grid;
+    grid-template-columns: 34px 1fr auto;
+    gap: 4px 16px;
+    align-items: baseline;
+    padding: 16px 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .track:first-of-type { border-top: none; padding-top: 0; }
+
+  .track__num {
+    font-size: 12px;
+    color: var(--ink-faint);
+    padding-top: 2px;
+  }
+
+  .track__title {
+    font-size: 17px;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .track__role {
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    margin: 3px 0 0;
+    grid-column: 2 / 3;
+  }
+
+  .track__year {
+    font-size: 13px;
+    color: var(--ink-faint);
+    text-align: right;
+  }
+
+  .track__bar-row {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .track__bar-track {
+    flex: 1;
+    height: 5px;
+    background: var(--line);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .track__bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--brass), var(--cyan));
+    border-radius: 3px;
+  }
+
+  .track__dur {
+    font-size: 11.5px;
+    color: var(--ink-faint);
+    white-space: nowrap;
+  }
+
+  /* ---------- field recording log ---------- */
+
+  .log__list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .log__entry {
+    display: grid;
+    grid-template-columns: 96px 1fr;
+    gap: 16px;
+    padding: 13px 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .log__entry:first-child { border-top: none; }
+
+  .log__date {
+    font-size: 12.5px;
+    color: var(--brass);
+    padding-top: 1px;
+  }
+
+  .log__place {
+    font-weight: 600;
+    font-size: 14.5px;
+    margin: 0 0 2px;
+  }
+
+  .log__note {
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    margin: 0;
+  }
+
+  /* ---------- tools / rack ---------- */
+
+  .rack {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 10px;
+  }
+
+  .rack__item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    box-shadow: var(--shadow);
+    font-size: 13px;
+  }
+
+  .rack__led {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--cyan);
+    flex-shrink: 0;
+  }
+
+  /* ---------- contact ---------- */
+
+  .contact__row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 28px;
+    margin-top: 4px;
+  }
+
+  .contact__link {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 8px;
+    text-decoration: none;
+    font-size: 15px;
+    font-weight: 600;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.15s ease, color 0.15s ease;
+  }
+
+  .contact__link:hover {
+    color: var(--cyan);
+    border-color: var(--cyan);
+  }
+
+  .contact__link .mono {
+    font-weight: 400;
+    color: var(--ink-faint);
+    font-size: 12px;
+  }
+
+  footer.out {
+    padding-top: 48px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 11.5px;
+    color: var(--ink-faint);
+  }
+
+  @media (max-width: 520px) {
+    .log__entry { grid-template-columns: 1fr; gap: 4px; }
+    .hero { padding-top: 52px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  }
+</style>
+
+<div class="page">
+
+  <header class="hero">
+    <div class="hero__eyebrow"><span class="hero__dot"></span>REC · SEOUL, YEONNAM-DONG STUDIO</div>
+    <h1 class="hero__name serif">서은유</h1>
+    <p class="hero__role">사운드 디자이너 · 폴리 아티스트 — <b>이야기가 들리는 소리</b>를 만듭니다.</p>
+    <canvas class="wave" id="wave" aria-hidden="true"></canvas>
+    <div class="hero__meta">
+      <span>SESSION TIME</span>
+      <span class="mono" id="clock">00:00:00:00</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="block about" aria-labelledby="about-h">
+      <p class="block__label">ABOUT</p>
+      <h2 class="block__heading" id="about-h">소리로 먼저 도착하는 이야기</h2>
+      <div class="about__grid">
+        <div>
+          <p>한국예술종합학교에서 영상원 사운드디자인을 전공한 뒤, 폴리 스튜디오 '소리광'에서 3년간 도제로 일하며 발소리와 옷깃 스치는 소리 하나까지 손으로 만드는 법을 배웠습니다. 이후 독립하여 장편 영화와 다큐멘터리, 애니메이션의 사운드를 디자인하고 있습니다.</p>
+          <p>대사와 음악 사이, 관객이 의식하지 못한 채로 감정을 느끼게 만드는 배경의 소리를 가장 좋아합니다. 촬영 현장의 소음을 지우는 일보다, 그 자리에 없던 소리를 있어야 할 자리에 놓는 일에 더 오래 매달립니다.</p>
+        </div>
+        <blockquote class="pull serif">"관객은 화면을 보지만, 먼저 반응하는 건 언제나 귀다."</blockquote>
+      </div>
+    </section>
+
+    <section class="block work" aria-labelledby="work-h">
+      <p class="block__label">SELECTED WORK</p>
+      <h2 class="block__heading" id="work-h">작업 목록</h2>
+
+      <div class="track">
+        <span class="track__num mono">01</span>
+        <div>
+          <p class="track__title">「밤의 항구」</p>
+          <p class="track__role">장편 영화 · 폴리 &amp; 사운드 디자인</p>
+        </div>
+        <span class="track__year mono">2025</span>
+        <div class="track__bar-row">
+          <div class="track__bar-track"><div class="track__bar-fill" style="width: 100%"></div></div>
+          <span class="track__dur mono">108 MIN</span>
+        </div>
+      </div>
+
+      <div class="track">
+        <span class="track__num mono">02</span>
+        <div>
+          <p class="track__title">「여름의 잔상」</p>
+          <p class="track__role">드라마 시리즈 (전 6부) · 폴리 아티스트</p>
+        </div>
+        <span class="track__year mono">2022</span>
+        <div class="track__bar-row">
+          <div class="track__bar-track"><div class="track__bar-fill" style="width: 42%"></div></div>
+          <span class="track__dur mono">45 MIN / EP</span>
+        </div>
+      </div>
+
+      <div class="track">
+        <span class="track__num mono">03</span>
+        <div>
+          <p class="track__title">「유리병 편지」</p>
+          <p class="track__role">다큐멘터리 · 필드레코딩 &amp; 믹싱</p>
+        </div>
+        <span class="track__year mono">2023</span>
+        <div class="track__bar-row">
+          <div class="track__bar-track"><div class="track__bar-fill" style="width: 78%"></div></div>
+          <span class="track__dur mono">84 MIN</span>
+        </div>
+      </div>
+
+      <div class="track">
+        <span class="track__num mono">04</span>
+        <div>
+          <p class="track__title">「고요한 식탁」</p>
+          <p class="track__role">단편 애니메이션 · 사운드 디자인</p>
+        </div>
+        <span class="track__year mono">2024</span>
+        <div class="track__bar-row">
+          <div class="track__bar-track"><div class="track__bar-fill" style="width: 11%"></div></div>
+          <span class="track__dur mono">12 MIN</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="block log" aria-labelledby="log-h">
+      <p class="block__label">FIELD RECORDING LOG</p>
+      <h2 class="block__heading" id="log-h">소리 채집 기록</h2>
+      <div class="log__list">
+        <div class="log__entry">
+          <span class="log__date mono">2026.03</span>
+          <div>
+            <p class="log__place">제주 성산일출봉</p>
+            <p class="log__note">새벽 5시, 밀물이 들어오기 시작하는 파도소리. 다음 영화의 오프닝으로 아껴두었다.</p>
+          </div>
+        </div>
+        <div class="log__entry">
+          <span class="log__date mono">2025.11</span>
+          <div>
+            <p class="log__place">서울 을지로 인쇄골목</p>
+            <p class="log__note">활판 인쇄기가 종이를 물고 놓는 리듬. 금속과 종이가 부딪히는 질감이 유독 선명했다.</p>
+          </div>
+        </div>
+        <div class="log__entry">
+          <span class="log__date mono">2025.07</span>
+          <div>
+            <p class="log__place">경주 첨성대 인근</p>
+            <p class="log__note">한여름 매미 떼가 한꺼번에 울음을 그치는 3초의 정적. 그 정적을 녹음했다.</p>
+          </div>
+        </div>
+        <div class="log__entry">
+          <span class="log__date mono">2024.12</span>
+          <div>
+            <p class="log__place">강원 대관령</p>
+            <p class="log__note">눈이 갓 쌓인 길을 밟는 발소리. 습도에 따라 삐걱임이 완전히 달라진다는 걸 이때 알았다.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="block tools" aria-labelledby="tools-h">
+      <p class="block__label">SIGNAL CHAIN</p>
+      <h2 class="block__heading" id="tools-h">작업 도구</h2>
+      <div class="rack">
+        <div class="rack__item"><span class="rack__led"></span>Pro Tools Ultimate</div>
+        <div class="rack__item"><span class="rack__led"></span>Foley Stage — 2 Channel</div>
+        <div class="rack__item"><span class="rack__led"></span>Sennheiser MKH 8020 Ambisonic</div>
+        <div class="rack__item"><span class="rack__led"></span>iZotope RX 11</div>
+        <div class="rack__item"><span class="rack__led"></span>Native Instruments Kontakt</div>
+        <div class="rack__item"><span class="rack__led"></span>Sound Devices MixPre-10</div>
+      </div>
+    </section>
+
+    <section class="block contact" aria-labelledby="contact-h">
+      <p class="block__label">CONTACT</p>
+      <h2 class="block__heading" id="contact-h">함께 작업하고 싶다면</h2>
+      <p style="color: var(--ink-soft); margin: 0 0 20px; max-width: 60ch;">장편, 단편, 게임, 설치 작업 모두 환영합니다. 대본이나 러프컷만 있어도 편하게 연락 주세요.</p>
+      <div class="contact__row">
+        <a class="contact__link" href="mailto:eunyu@soundwell.studio">eunyu@soundwell.studio <span class="mono">MAIL</span></a>
+        <a class="contact__link" href="#">@eunyu.foley <span class="mono">INSTAGRAM</span></a>
+        <a class="contact__link" href="#">soundwell.studio <span class="mono">PORTFOLIO</span></a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="out mono">
+    <span>© 2026 SEO EUNYU SOUND STUDIO</span>
+    <span>OUT</span>
+  </footer>
+</div>
+
+<script>
+  (function () {
+    var canvas = document.getElementById('wave');
+    var ctx = canvas.getContext('2d');
+    var clockEl = document.getElementById('clock');
+    var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var bars = [];
+    var N = 90;
+
+    for (var i = 0; i < N; i++) {
+      bars.push(0.15 + Math.random() * 0.85);
+    }
+
+    function resize() {
+      var rect = canvas.getBoundingClientRect();
+      canvas.width = Math.round(rect.width * dpr);
+      canvas.height = Math.round(rect.height * dpr);
+    }
+
+    function frame(t) {
+      var w = canvas.width, h = canvas.height;
+      var styles = getComputedStyle(document.documentElement);
+      var lineColor = styles.getPropertyValue('--line').trim();
+      var brass = styles.getPropertyValue('--brass').trim();
+      var cyan = styles.getPropertyValue('--cyan').trim();
+
+      ctx.clearRect(0, 0, w, h);
+
+      var gap = w / N;
+      var barW = Math.max(1, gap * 0.55);
+      var playX = reduceMotion ? w * 0.5 : (w * ((t * 0.00006) % 1));
+
+      for (var i = 0; i < N; i++) {
+        var x = i * gap + gap / 2;
+        var amp = reduceMotion ? bars[i] : bars[i] * (0.55 + 0.45 * Math.sin(t * 0.0016 + i * 0.35));
+        var barH = amp * h * 0.82;
+        ctx.fillStyle = x < playX ? brass : lineColor;
+        ctx.fillRect(x - barW / 2, (h - barH) / 2, barW, barH);
+      }
+
+      if (!reduceMotion) {
+        ctx.fillStyle = cyan;
+        ctx.fillRect(playX - 1, 0, 2, h);
+      }
+
+      var totalSec = t / 1000;
+      var mm = Math.floor(totalSec / 60);
+      var ss = Math.floor(totalSec % 60);
+      var ff = Math.floor((totalSec * 24) % 24);
+      clockEl.textContent =
+        String(Math.floor(mm / 60)).padStart(2, '0') + ':' +
+        String(mm % 60).padStart(2, '0') + ':' +
+        String(ss).padStart(2, '0') + ':' +
+        String(ff).padStart(2, '0');
+
+      if (!reduceMotion) {
+        requestAnimationFrame(frame);
+      }
+    }
+
+    resize();
+    window.addEventListener('resize', resize);
+    requestAnimationFrame(frame);
+    if (reduceMotion) frame(0);
+
+    var mq = window.matchMedia('(prefers-color-scheme: dark)');
+    if (mq.addEventListener) mq.addEventListener('change', function () { frame(performance.now()); });
+  })();
+</script>
