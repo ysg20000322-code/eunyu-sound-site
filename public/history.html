@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>활동 이력 - 내 인생 정리</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#4f46e5">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icon.svg">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+  <nav class="navbar">
+    <a href="/" class="nav-link">오늘 체크인</a>
+    <a href="/calendar.html" class="nav-link">캘린더</a>
+    <a href="/diary.html" class="nav-link">일기</a>
+    <a href="/history.html" class="nav-link active">활동 이력</a>
+  </nav>
+
+  <header class="topbar">
+    <h1>참여 활동 / 경력</h1>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>새 활동 추가</h2>
+      <div class="activity-form">
+        <div>
+          <label for="fName">활동명 *</label>
+          <input type="text" id="fName" placeholder="예: 목표달성동아리(똑집)">
+        </div>
+        <div>
+          <label for="fPeriod">시기</label>
+          <input type="text" id="fPeriod" placeholder="예: 2026~">
+        </div>
+        <div>
+          <label for="fRole">역할/직책</label>
+          <input type="text" id="fRole" placeholder="예: 회장">
+        </div>
+        <div>
+          <label for="fDetail">주요 활동 내용</label>
+          <textarea id="fDetail" rows="2" placeholder="무엇을 했는지"></textarea>
+        </div>
+        <div>
+          <label for="fRecord">남아있는 기록</label>
+          <input type="text" id="fRecord" placeholder="예: 캘린더 일정, 사진, 문서">
+        </div>
+        <div>
+          <label for="fNote">비고</label>
+          <input type="text" id="fNote" placeholder="추가 메모">
+        </div>
+      </div>
+      <button id="addBtn" class="save-btn">추가하기</button>
+      <span id="addStatus" class="save-status"></span>
+    </section>
+
+    <section class="card">
+      <h2>전체 목록</h2>
+      <div id="activityList" class="activity-list"></div>
+    </section>
+  </main>
+</div>
+
+<script src="pwa.js"></script>
+<script src="history.js"></script>
+</body>
+</html>

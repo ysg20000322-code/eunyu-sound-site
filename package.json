@@ -1,0 +1,10 @@
+{
+  "name": "eunyu-sound-site",
+  "version": "0.1.0",
+  "private": true,
+  "type": "commonjs",
+  "dependencies": {
+    "@vercel/blob": "^2.6.1",
+    "express": "^4.19.2"
+  }
+}

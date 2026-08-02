@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>캘린더 - 내 인생 정리</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#4f46e5">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icon.svg">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+  <nav class="navbar">
+    <a href="/" class="nav-link">오늘 체크인</a>
+    <a href="/calendar.html" class="nav-link active">캘린더</a>
+    <a href="/diary.html" class="nav-link">일기</a>
+    <a href="/history.html" class="nav-link">활동 이력</a>
+  </nav>
+
+  <header class="topbar">
+    <h1>캘린더</h1>
+  </header>
+
+  <main>
+    <section class="card">
+      <div class="cal-header">
+        <button id="prevMonth" class="nav-btn" aria-label="이전 달">‹</button>
+        <span id="calTitle" class="cal-title"></span>
+        <button id="nextMonth" class="nav-btn" aria-label="다음 달">›</button>
+      </div>
+      <div class="cal-grid" id="calDow"></div>
+      <div class="cal-grid" id="calGrid"></div>
+    </section>
+  </main>
+</div>
+
+<div id="modalOverlay" class="modal-overlay" hidden>
+  <div class="modal">
+    <button id="modalClose" class="modal-close" aria-label="닫기">×</button>
+    <h3 id="modalDate"></h3>
+    <div id="modalEventList" class="event-list"></div>
+    <div id="modalEventEmpty" class="event-empty" hidden>등록된 일정이 없어요.</div>
+
+    <div class="add-event-row">
+      <input type="time" id="newEventTime">
+      <input type="text" id="newEventTitle" placeholder="일정 제목 (예: 동아리 정기모임)">
+    </div>
+    <button id="addEventBtn" class="save-btn" style="margin-top:8px;">일정 추가</button>
+    <div style="margin-top:12px;">
+      <a id="goCheckin" href="#" class="btn-secondary" style="text-decoration:none; display:inline-block;">이 날짜로 체크인 하러 가기</a>
+    </div>
+  </div>
+</div>
+
+<script src="pwa.js"></script>
+<script src="calendar.js"></script>
+</body>
+</html>

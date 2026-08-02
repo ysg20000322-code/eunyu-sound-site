@@ -1,0 +1,13 @@
+{
+  "name": "내 인생 정리",
+  "short_name": "인생정리",
+  "description": "일정, 목표 체크인, 일기, 체크리스트를 한 곳에서 관리하는 개인용 앱",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#16181d",
+  "theme_color": "#4f46e5",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

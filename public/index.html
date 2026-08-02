@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>(function(){try{document.documentElement.setAttribute('data-theme', localStorage.getItem('theme')||'dark');}catch(e){}})();</script>
+<title>내 인생 정리</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#4f46e5">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icon.svg">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+  <header class="app-header">
+    <h1>내 인생 정리</h1>
+    <button id="menuBtn" class="hamburger-btn" aria-label="메뉴">☰</button>
+  </header>
+
+  <main>
+    <div class="tile-grid">
+      <a href="/calendar.html" class="tile">
+        <span class="tile-emoji">📅</span>
+        <span>캘린더</span>
+      </a>
+      <a href="/diary.html" class="tile">
+        <span class="tile-emoji">📔</span>
+        <span>일기</span>
+      </a>
+      <a href="/history.html" class="tile">
+        <span class="tile-emoji">🏅</span>
+        <span>활동</span>
+      </a>
+      <button id="quickAddBtn" class="tile tile-add">
+        <span class="tile-emoji">+</span>
+        <span>빠른 추가</span>
+      </button>
+    </div>
+
+    <p class="hint" style="margin-top:20px; text-align:center;">
+      <a href="/checkin.html">오늘 체크인 화면 열기 →</a>
+    </p>
+  </main>
+</div>
+
+<div id="menuOverlay" class="menu-overlay" hidden>
+  <nav id="sideMenu" class="side-menu">
+    <div class="menu-header">
+      <h3>메뉴</h3>
+      <button id="menuCloseBtn" class="modal-close" aria-label="닫기">×</button>
+    </div>
+    <ul class="menu-list">
+      <li><a href="/" data-nav>홈</a></li>
+      <li><a href="/calendar.html" data-nav>캘린더</a></li>
+      <li><a href="/diary.html" data-nav>일기</a></li>
+      <li><a href="/history.html" data-nav>활동 이력</a></li>
+      <li><a href="/checkin.html" data-nav>오늘 체크인</a></li>
+    </ul>
+    <div class="menu-section-title">설정</div>
+    <div class="theme-row">
+      <span>라이트 모드</span>
+      <label class="switch">
+        <input type="checkbox" id="themeToggle">
+        <span class="switch-track"></span>
+      </label>
+    </div>
+  </nav>
+</div>
+
+<div id="quickAddOverlay" class="modal-overlay" hidden>
+  <div class="modal">
+    <button id="quickAddClose" class="modal-close" aria-label="닫기">×</button>
+    <h3>빠른 추가</h3>
+    <div class="quickadd-tabs">
+      <button class="quickadd-tab active" data-target="qaEvent">일정</button>
+      <button class="quickadd-tab" data-target="qaChecklist">체크리스트</button>
+      <button class="quickadd-tab" data-target="qaDiary">일기</button>
+    </div>
+
+    <div id="qaEvent" class="quickadd-panel">
+      <div class="add-event-row">
+        <input type="time" id="qaEventTime">
+        <input type="text" id="qaEventTitle" placeholder="오늘 일정 제목">
+      </div>
+      <button id="qaEventSave" class="save-btn" style="margin-top:10px;">오늘 일정에 추가</button>
+    </div>
+
+    <div id="qaChecklist" class="quickadd-panel" hidden>
+      <input type="text" id="qaChecklistText" placeholder="오늘 할 일">
+      <button id="qaChecklistSave" class="save-btn" style="margin-top:10px;">체크리스트에 추가</button>
+    </div>
+
+    <div id="qaDiary" class="quickadd-panel" hidden>
+      <textarea id="qaDiaryText" rows="3" placeholder="오늘 한 줄 일기"></textarea>
+      <button id="qaDiarySave" class="save-btn" style="margin-top:10px;">일기 저장</button>
+    </div>
+
+    <span id="qaStatus" class="save-status"></span>
+  </div>
+</div>
+
+<script src="pwa.js"></script>
+<script src="menu.js"></script>
+<script src="home.js"></script>
+</body>
+</html>

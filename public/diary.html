@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>일기 - 내 인생 정리</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#4f46e5">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icon.svg">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+  <nav class="navbar">
+    <a href="/" class="nav-link">오늘 체크인</a>
+    <a href="/calendar.html" class="nav-link">캘린더</a>
+    <a href="/diary.html" class="nav-link active">일기</a>
+    <a href="/history.html" class="nav-link">활동 이력</a>
+  </nav>
+
+  <header class="topbar">
+    <h1>일기</h1>
+    <div class="date-nav">
+      <button id="prevDay" class="nav-btn" aria-label="이전 날">‹</button>
+      <span id="currentDateLabel" class="date-label"></span>
+      <button id="nextDay" class="nav-btn" aria-label="다음 날">›</button>
+      <button id="todayBtn" class="today-btn">오늘</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>이 날의 일기</h2>
+      <textarea id="diaryText" rows="6" placeholder="오늘 하루는 어땠나요?"></textarea>
+      <button id="saveBtn" class="save-btn">저장하기</button>
+      <span id="saveStatus" class="save-status"></span>
+    </section>
+
+    <section class="card">
+      <h2>최근 일기</h2>
+      <div id="diaryHistory" class="history"></div>
+    </section>
+  </main>
+</div>
+
+<script src="pwa.js"></script>
+<script src="diary.js"></script>
+</body>
+</html>
