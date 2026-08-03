@@ -731,3 +731,37 @@ textarea, input[type="text"], .num-input {
 .note-detail {
   margin-top: 8px;
 }
+
+/* ---------- goal card ---------- */
+.goal-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.goal-header-row h2 { margin: 0; }
+
+.goal-progress {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  height: 10px;
+  margin: 12px 0;
+  overflow: hidden;
+}
+.goal-progress-bar {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 999px;
+  transition: width 0.2s;
+}
+
+.goal-milestones { margin-bottom: 12px; }
+
+.goal-edit-milestones { border-top: 1px solid var(--border); padding-top: 10px; }
+
+.goal-edit-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}

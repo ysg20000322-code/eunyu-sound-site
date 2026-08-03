@@ -23,7 +23,6 @@ const els = {
   newEventTime: document.getElementById("newEventTime"),
   newEventTitle: document.getElementById("newEventTitle"),
   addEventBtn: document.getElementById("addEventBtn"),
-  goCheckin: document.getElementById("goCheckin"),
 };
 
 function pad2(n) {
@@ -105,7 +104,6 @@ async function openModal(key) {
   const [y, m, d] = key.split("-").map(Number);
   const dow = DOW[new Date(y, m - 1, d).getDay()];
   els.modalDate.textContent = `${y}.${m}.${d} (${dow})`;
-  els.goCheckin.href = `/?date=${key}`;
   els.newEventTime.value = "";
   els.newEventTitle.value = "";
   await renderModalEvents();
