@@ -1,6 +1,6 @@
 const express = require("express");
 const crypto = require("crypto");
-const { readJSON, writeJSON, seedIfMissing } = require("../lib/store");
+const { readJSON, writeJSON, mergeSeed } = require("../lib/store");
 
 const router = express.Router();
 
@@ -21,7 +21,7 @@ const SEED = [
   },
 ];
 
-seedIfMissing("wrongnotes", SEED).catch((err) => console.error("[wrongnotes] seed failed:", err));
+mergeSeed("wrongnotes", SEED).catch((err) => console.error("[wrongnotes] seed merge failed:", err));
 
 function sanitizeChoices(choices) {
   if (!Array.isArray(choices)) return [];
