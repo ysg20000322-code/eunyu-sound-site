@@ -29,6 +29,86 @@ for (let i = 0; i < 4; i++) addChoiceRow();
 
 document.getElementById("addChoiceBtn").addEventListener("click", () => addChoiceRow());
 
+// ---------- photo -> AI extraction ----------
+const photoFile = document.getElementById("photoFile");
+const photoPreview = document.getElementById("photoPreview");
+const extractBtn = document.getElementById("extractBtn");
+const extractStatus = document.getElementById("extractStatus");
+
+photoFile.addEventListener("change", () => {
+  const file = photoFile.files[0];
+  extractBtn.disabled = !file;
+  extractStatus.textContent = "";
+  if (!file) {
+    photoPreview.hidden = true;
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = () => {
+    photoPreview.src = reader.result;
+    photoPreview.hidden = false;
+  };
+  reader.readAsDataURL(file);
+});
+
+function compressImage(file, maxDim = 1600, quality = 0.85) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      let { width, height } = img;
+      if (width > maxDim || height > maxDim) {
+        const scale = maxDim / Math.max(width, height);
+        width = Math.round(width * scale);
+        height = Math.round(height * scale);
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+      resolve(canvas.toDataURL("image/jpeg", quality));
+      URL.revokeObjectURL(img.src);
+    };
+    img.onerror = reject;
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+function populateFormFromExtracted(data) {
+  document.getElementById("fSource").value = data.source || "";
+  document.getElementById("fQuestion").value = data.question || "";
+  document.getElementById("fContext").value = data.context || "";
+  document.getElementById("fExplanation").value = data.explanation || "";
+
+  choiceRowsEl.innerHTML = "";
+  const choices = Array.isArray(data.choices) && data.choices.length ? data.choices : ["", "", "", ""];
+  const answerIndex = Number.isInteger(data.answerIndex) ? data.answerIndex : -1;
+  choices.forEach((c, i) => addChoiceRow(c, i === answerIndex));
+}
+
+extractBtn.addEventListener("click", async () => {
+  const file = photoFile.files[0];
+  if (!file) return;
+  extractBtn.disabled = true;
+  extractStatus.textContent = "AI가 이미지를 읽는 중...";
+  try {
+    const dataUrl = await compressImage(file);
+    const base64 = dataUrl.split(",")[1];
+    const res = await fetch("/api/wrongnotes/extract", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ imageBase64: base64, mediaType: "image/jpeg" }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "인식 실패");
+    populateFormFromExtracted(data);
+    extractStatus.textContent = "인식 완료! 아래에서 내용을 확인하고 추가하세요.";
+  } catch (err) {
+    extractStatus.textContent = err.message || "인식에 실패했어요. 직접 입력해주세요.";
+  } finally {
+    extractBtn.disabled = false;
+  }
+});
+
 // ---------- add note ----------
 const addStatus = document.getElementById("addStatus");
 

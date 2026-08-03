@@ -9,7 +9,7 @@ const diaryRouter = require("../routes/diary");
 const wrongnotesRouter = require("../routes/wrongnotes");
 
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: "15mb" }));
 app.use(express.static(path.join(__dirname, "..", "public")));
 
 app.use("/api/checkins", checkinsRouter);

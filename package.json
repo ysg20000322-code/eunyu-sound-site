@@ -4,6 +4,7 @@
   "private": true,
   "type": "commonjs",
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.115.0",
     "@vercel/blob": "^2.6.1",
     "express": "^4.19.2"
   }

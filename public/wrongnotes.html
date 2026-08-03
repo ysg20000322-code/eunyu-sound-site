@@ -53,6 +53,17 @@
     </section>
 
     <section class="card">
+      <h2>사진으로 추가 (AI 자동 인식)</h2>
+      <p class="hint">오답노트 스크린샷을 올리면 AI가 문제/선택지/정답/해설을 읽어서 아래 입력란에 채워줘요. 저장 전에 내용을 확인하고 수정할 수 있어요.</p>
+      <input type="file" id="photoFile" accept="image/*">
+      <img id="photoPreview" alt="미리보기" hidden style="max-width:100%; border-radius:10px; margin-top:10px;">
+      <div>
+        <button id="extractBtn" class="save-btn" disabled>AI로 인식하기</button>
+        <span id="extractStatus" class="save-status"></span>
+      </div>
+    </section>
+
+    <section class="card">
       <h2>문제 추가</h2>
       <div class="activity-form">
         <div>

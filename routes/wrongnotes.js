@@ -1,8 +1,32 @@
 const express = require("express");
 const crypto = require("crypto");
+const Anthropic = require("@anthropic-ai/sdk");
 const { readJSON, writeJSON, seedIfMissing } = require("../lib/store");
 
 const router = express.Router();
+
+const EXTRACT_SCHEMA = {
+  type: "object",
+  properties: {
+    source: { type: "string" },
+    question: { type: "string" },
+    context: { type: "string" },
+    choices: { type: "array", items: { type: "string" } },
+    answerIndex: { type: "integer" },
+    explanation: { type: "string" },
+  },
+  required: ["source", "question", "context", "choices", "answerIndex", "explanation"],
+  additionalProperties: false,
+};
+
+const EXTRACT_PROMPT = `이 이미지는 시험 오답노트 스크린샷입니다. 다음 정보를 읽어서 JSON으로 추출해주세요:
+- source: 문제 출처 (예: "2021년 09월 12일 기출문제 94번"). 없으면 빈 문자열.
+- question: 문제 지문 전체 (선택지 제외).
+- context: 문제에 딸린 표나 추가 조건/보기 텍스트. 없으면 빈 문자열.
+- choices: 선택지 목록 (번호(1,2,3...)는 제외한 내용만, 배열).
+- answerIndex: 정답 선택지의 0부터 시작하는 인덱스. 이미지에 정답 표시가 없으면 -1.
+- explanation: 해설 텍스트. 없으면 빈 문자열.
+choices 배열의 순서와 answerIndex가 정확히 일치해야 합니다.`;
 
 const SEED = [
   {
@@ -59,6 +83,49 @@ router.post("/", async (req, res) => {
   list.push(item);
   await writeJSON("wrongnotes", list);
   res.status(201).json(item);
+});
+
+router.post("/extract", async (req, res) => {
+  const { imageBase64, mediaType } = req.body;
+  if (!imageBase64) return res.status(400).json({ error: "imageBase64 is required" });
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return res.status(500).json({
+      error: "ANTHROPIC_API_KEY가 설정되지 않았어요. Vercel 프로젝트 환경 변수에 추가해주세요.",
+    });
+  }
+
+  try {
+    const anthropic = new Anthropic();
+    const response = await anthropic.messages.create({
+      model: "claude-opus-5",
+      max_tokens: 2048,
+      thinking: { type: "disabled" },
+      output_config: { format: { type: "json_schema", schema: EXTRACT_SCHEMA } },
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "image",
+              source: {
+                type: "base64",
+                media_type: mediaType || "image/jpeg",
+                data: imageBase64,
+              },
+            },
+            { type: "text", text: EXTRACT_PROMPT },
+          ],
+        },
+      ],
+    });
+
+    const textBlock = response.content.find((b) => b.type === "text");
+    if (!textBlock) throw new Error("no text block in response");
+    res.json(JSON.parse(textBlock.text));
+  } catch (err) {
+    console.error("[wrongnotes] extract failed:", err);
+    res.status(502).json({ error: "이미지 인식에 실패했어요. 다시 시도하거나 직접 입력해주세요." });
+  }
 });
 
 router.post("/:id/attempt", async (req, res) => {
