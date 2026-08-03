@@ -150,7 +150,16 @@ const goalEls = {
   completeBtn: document.getElementById("goalCompleteBtn"),
   deleteBtn: document.getElementById("goalDeleteBtn"),
   status: document.getElementById("goalStatus"),
+
+  behaviorEnabled: document.getElementById("goalBehaviorEnabled"),
+  behaviorFields: document.getElementById("goalBehaviorFields"),
+  behaviorTime: document.getElementById("goalBehaviorTime"),
+  behaviorTimezone: document.getElementById("goalBehaviorTimezone"),
 };
+
+goalEls.behaviorEnabled.addEventListener("change", () => {
+  goalEls.behaviorFields.hidden = !goalEls.behaviorEnabled.checked;
+});
 
 let currentGoal = null;
 
@@ -235,11 +244,22 @@ function openGoalModal() {
     goalEls.noteInput.value = currentGoal.note || "";
     goalEls.milestonesSection.hidden = false;
     renderMilestoneEditor();
+
+    const behavior = currentGoal.behavior || {};
+    goalEls.behaviorEnabled.checked = Boolean(behavior.enabled);
+    goalEls.behaviorFields.hidden = !behavior.enabled;
+    goalEls.behaviorTime.value = behavior.time || "";
+    goalEls.behaviorTimezone.value = behavior.timezone || "Asia/Seoul";
   } else {
     goalEls.titleInput.value = "";
     goalEls.targetDateInput.value = "";
     goalEls.noteInput.value = "";
     goalEls.milestonesSection.hidden = true;
+
+    goalEls.behaviorEnabled.checked = false;
+    goalEls.behaviorFields.hidden = true;
+    goalEls.behaviorTime.value = "";
+    goalEls.behaviorTimezone.value = "Asia/Seoul";
   }
   goalEls.overlay.hidden = false;
 }
@@ -254,6 +274,13 @@ goalEls.overlay.addEventListener("click", (e) => {
 goalEls.saveBtn.addEventListener("click", async () => {
   const title = goalEls.titleInput.value.trim();
   if (!title) return;
+
+  const behaviorEnabled = goalEls.behaviorEnabled.checked;
+  if (behaviorEnabled && !goalEls.behaviorTime.value) {
+    goalEls.status.textContent = "리마인더 시간을 입력하세요";
+    return;
+  }
+
   const body = {
     title,
     targetDate: goalEls.targetDateInput.value || null,
@@ -277,8 +304,23 @@ goalEls.saveBtn.addEventListener("click", async () => {
     goalEls.milestonesSection.hidden = false;
     renderMilestoneEditor();
   }
+
+  const behaviorRes = await fetch("/api/goals", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      behavior: {
+        enabled: behaviorEnabled,
+        time: goalEls.behaviorTime.value || null,
+        timezone: goalEls.behaviorTimezone.value,
+      },
+    }),
+  });
+  currentGoal = await behaviorRes.json();
+
   goalEls.status.textContent = "저장됨 ✓";
   renderGoalCard();
+  document.dispatchEvent(new CustomEvent("lifeapp:goal-updated", { detail: currentGoal }));
 });
 
 goalEls.addMilestoneBtn.addEventListener("click", async () => {

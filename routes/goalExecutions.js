@@ -102,6 +102,11 @@ function applyTransition(record, to, source, goal) {
   return null;
 }
 
+router.get("/test-trigger-status", (req, res) => {
+  const allowed = process.env.NODE_ENV !== "production" || process.env.ALLOW_TEST_TRIGGER === "true";
+  res.json(ok({ enabled: allowed }));
+});
+
 router.get("/today", async (req, res) => {
   try {
     const goalId = req.query.goalId;

@@ -37,6 +37,13 @@
           <span id="companionAvatar" class="coach-emoji"></span>
           <span id="companionBubble" class="coach-text"></span>
         </div>
+        <div id="todayAction" class="today-action" hidden>
+          <div class="today-action-row">
+            <span id="todayActionText" class="today-action-text"></span>
+            <button id="todayActionBtn" class="btn-secondary" hidden></button>
+          </div>
+          <button id="testTriggerBtn" class="btn-secondary today-test-btn" hidden>지금 테스트</button>
+        </div>
       </div>
     </section>
 
@@ -108,6 +115,26 @@
       <label for="goalNoteInput">메모 (선택)</label>
       <textarea id="goalNoteInput" rows="2"></textarea>
     </div>
+
+    <div class="theme-row" style="margin-top:10px;">
+      <span>매일 행동 리마인더</span>
+      <label class="switch">
+        <input type="checkbox" id="goalBehaviorEnabled">
+        <span class="switch-track"></span>
+      </label>
+    </div>
+    <div id="goalBehaviorFields" class="goal-control checkline" hidden>
+      <input type="time" id="goalBehaviorTime">
+      <select id="goalBehaviorTimezone">
+        <option value="Asia/Seoul">서울 (Asia/Seoul)</option>
+        <option value="Asia/Tokyo">도쿄 (Asia/Tokyo)</option>
+        <option value="America/Los_Angeles">LA (America/Los_Angeles)</option>
+        <option value="America/New_York">뉴욕 (America/New_York)</option>
+        <option value="Europe/London">런던 (Europe/London)</option>
+        <option value="UTC">UTC</option>
+      </select>
+    </div>
+
     <button id="goalSaveBtn" class="save-btn" style="margin-top:10px;">저장</button>
 
     <div id="goalEditMilestones" class="goal-edit-milestones" hidden>
@@ -158,9 +185,36 @@
   </div>
 </div>
 
+<div id="interventionOverlay" class="modal-overlay" hidden>
+  <div class="modal intervention-modal" role="dialog" aria-modal="true" aria-label="오늘의 행동">
+    <button id="interventionClose" class="modal-close" aria-label="닫기">×</button>
+    <div class="intervention-companion">
+      <span id="interventionEmoji" class="intervention-emoji"></span>
+      <p id="interventionMessage" class="intervention-message"></p>
+    </div>
+    <div id="interventionActions" class="intervention-actions">
+      <button id="interventionStartBtn" class="save-btn">시작하기</button>
+      <button id="interventionSnoozeBtn" class="btn-secondary">5분 미루기</button>
+      <button id="interventionSkipBtn" class="btn-secondary">건너뛰기</button>
+    </div>
+    <div id="interventionStartedActions" class="intervention-actions" hidden>
+      <button id="interventionCompleteBtn" class="save-btn">완료했어요</button>
+      <button id="interventionSkipStartedBtn" class="btn-secondary">그만두기</button>
+    </div>
+    <div id="interventionSuccess" class="intervention-success" hidden>
+      <span class="intervention-success-emoji">🎉</span>
+      <p>오늘도 해냈어요!</p>
+    </div>
+    <span id="interventionStatus" class="save-status" aria-live="polite"></span>
+  </div>
+</div>
+
 <script src="pwa.js"></script>
 <script src="menu.js"></script>
 <script src="companion.js"></script>
+<script src="intervention-engine.js"></script>
+<script src="companion-messages.js"></script>
 <script src="home.js"></script>
+<script src="intervention-ui.js"></script>
 </body>
 </html>

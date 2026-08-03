@@ -765,3 +765,82 @@ textarea, input[type="text"], input[type="password"], .num-input {
   gap: 8px;
   margin-top: 12px;
 }
+
+/* ---------- today's action (goal-behavior intervention) ---------- */
+.today-action {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.today-action-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.today-action-text {
+  font-size: 0.88rem;
+  color: var(--text);
+}
+
+.today-test-btn {
+  margin-top: 8px;
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+
+/* ---------- intervention modal ---------- */
+.intervention-modal {
+  text-align: center;
+}
+
+.intervention-companion {
+  padding: 10px 0 4px;
+}
+
+.intervention-emoji {
+  font-size: 2.6rem;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.intervention-message {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 0 0 16px;
+}
+
+.intervention-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.intervention-actions button {
+  min-height: 46px;
+  font-size: 1rem;
+}
+
+.intervention-success {
+  padding: 16px 0;
+  animation: intervention-pop 0.4s ease;
+}
+
+.intervention-success-emoji {
+  font-size: 2.8rem;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.intervention-success p {
+  font-weight: 600;
+  margin: 0;
+}
+
+@keyframes intervention-pop {
+  0% { transform: scale(0.7); opacity: 0; }
+  60% { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
