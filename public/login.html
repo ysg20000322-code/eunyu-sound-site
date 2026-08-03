@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>(function(){try{document.documentElement.setAttribute('data-theme', localStorage.getItem('theme')||'dark');}catch(e){}})();</script>
+<title>로그인 - 내 인생 정리</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#4f46e5">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icon.svg">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+  <header class="app-header">
+    <h1>내 인생 정리</h1>
+  </header>
+
+  <main>
+    <section class="card" style="margin-top:60px;">
+      <h2>비밀번호를 입력해주세요</h2>
+      <input type="password" id="passwordInput" placeholder="비밀번호" autofocus>
+      <button id="loginBtn" class="save-btn" style="margin-top:10px;">입장하기</button>
+      <p id="loginError" class="hint" style="color:#ef4444; margin-top:8px;" hidden></p>
+    </section>
+  </main>
+</div>
+
+<script src="login.js"></script>
+</body>
+</html>
