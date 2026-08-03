@@ -9,6 +9,7 @@ const diaryRouter = require("../routes/diary");
 const wrongnotesRouter = require("../routes/wrongnotes");
 const settingsRouter = require("../routes/settings");
 const goalsRouter = require("../routes/goals");
+const goalExecutionsRouter = require("../routes/goalExecutions");
 const authRouter = require("../routes/auth");
 const { isAuthenticated } = require("../lib/auth");
 
@@ -34,6 +35,7 @@ app.use("/api/diary", diaryRouter);
 app.use("/api/wrongnotes", wrongnotesRouter);
 app.use("/api/settings", settingsRouter);
 app.use("/api/goals", goalsRouter);
+app.use("/api/goal-executions", goalExecutionsRouter);
 
 app.use((err, req, res, next) => {
   console.error(err);

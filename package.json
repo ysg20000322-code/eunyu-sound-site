@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "type": "commonjs",
+  "scripts": {
+    "start": "node -e \"require('./api/index.js').listen(process.env.PORT || 3000)\"",
+    "test": "node --test"
+  },
   "dependencies": {
     "@vercel/blob": "^2.6.1",
     "express": "^4.19.2"

@@ -1,11 +1,12 @@
 const express = require("express");
 const crypto = require("crypto");
 const { readJSON, writeJSON } = require("../lib/store");
+const { normalizeGoal } = require("../lib/goalSchema");
 
 const router = express.Router();
 
 router.get("/", async (req, res) => {
-  res.json(await readJSON("goals", null));
+  res.json(normalizeGoal(await readJSON("goals", null)));
 });
 
 router.put("/", async (req, res) => {
@@ -25,14 +26,24 @@ router.put("/", async (req, res) => {
   res.status(201).json(goal);
 });
 
+const BEHAVIOR_TIME_RE = /^([01]\d|2[0-3]):([0-5]\d)$/;
+
 router.patch("/", async (req, res) => {
-  const goal = await readJSON("goals", null);
+  const goal = normalizeGoal(await readJSON("goals", null));
   if (!goal) return res.status(404).json({ error: "no goal set" });
 
   if (typeof req.body.title === "string" && req.body.title.trim()) goal.title = req.body.title.trim();
   if ("targetDate" in req.body) goal.targetDate = req.body.targetDate || null;
   if (typeof req.body.note === "string") goal.note = req.body.note;
   if ("completed" in req.body) goal.completedAt = req.body.completed ? new Date().toISOString() : null;
+
+  if (req.body.behavior && typeof req.body.behavior === "object") {
+    const b = req.body.behavior;
+    if ("time" in b && b.time !== null && !BEHAVIOR_TIME_RE.test(b.time)) {
+      return res.status(400).json({ error: "behavior.time must be HH:mm" });
+    }
+    goal.behavior = { ...goal.behavior, ...b };
+  }
 
   await writeJSON("goals", goal);
   res.json(goal);
