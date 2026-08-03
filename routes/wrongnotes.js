@@ -21,7 +21,30 @@ const SEED = [
   },
 ];
 
-mergeSeed("wrongnotes", SEED).catch((err) => console.error("[wrongnotes] seed merge failed:", err));
+function normalizeQuestion(q) {
+  return String(q || "").trim().replace(/\s+/g, " ").toLowerCase();
+}
+
+function dedupeByQuestion(list) {
+  const seen = new Set();
+  const result = [];
+  for (const item of list) {
+    const key = normalizeQuestion(item.question);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    result.push(item);
+  }
+  return result;
+}
+
+async function seedAndDedupe() {
+  await mergeSeed("wrongnotes", SEED);
+  const list = await readJSON("wrongnotes", []);
+  const deduped = dedupeByQuestion(list);
+  if (deduped.length !== list.length) await writeJSON("wrongnotes", deduped);
+}
+
+seedAndDedupe().catch((err) => console.error("[wrongnotes] seed/dedupe failed:", err));
 
 function sanitizeChoices(choices) {
   if (!Array.isArray(choices)) return [];
@@ -45,6 +68,12 @@ router.post("/", async (req, res) => {
   }
 
   const list = await readJSON("wrongnotes", []);
+  const dupKey = normalizeQuestion(question);
+  const existing = list.find((n) => normalizeQuestion(n.question) === dupKey);
+  if (existing) {
+    return res.status(200).json({ ...existing, duplicate: true });
+  }
+
   const item = {
     id: crypto.randomUUID(),
     source: (req.body.source || "").trim(),

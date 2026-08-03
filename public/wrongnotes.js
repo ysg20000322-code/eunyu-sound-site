@@ -82,8 +82,9 @@ document.getElementById("addBtn").addEventListener("click", async () => {
   choiceRowsEl.innerHTML = "";
   for (let i = 0; i < 4; i++) addChoiceRow();
 
-  addStatus.textContent = "추가됨 ✓";
-  setTimeout(() => (addStatus.textContent = ""), 2000);
+  const saved = await res.json().catch(() => null);
+  addStatus.textContent = saved && saved.duplicate ? "이미 등록된 문제예요 (중복 건너뜀)" : "추가됨 ✓";
+  setTimeout(() => (addStatus.textContent = ""), 2500);
 
   await loadAll();
 });
