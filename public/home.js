@@ -350,15 +350,18 @@ goalEls.completeBtn.addEventListener("click", async () => {
   currentGoal = await res.json();
   goalEls.overlay.hidden = true;
   renderGoalCard();
+  document.dispatchEvent(new CustomEvent("lifeapp:goal-updated", { detail: currentGoal }));
 });
 
 goalEls.deleteBtn.addEventListener("click", async () => {
   if (!currentGoal) return;
   if (!confirm("목표를 삭제할까요?")) return;
+  const deletedGoal = currentGoal;
   await fetch("/api/goals", { method: "DELETE" });
   currentGoal = null;
   goalEls.overlay.hidden = true;
   renderGoalCard();
+  document.dispatchEvent(new CustomEvent("lifeapp:goal-updated", { detail: deletedGoal }));
 });
 
 loadSettings();

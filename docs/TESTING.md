@@ -71,3 +71,30 @@ curl -s -b "$COOKIE" "http://localhost:3000/api/settings"
 - 로그인 없이 신규 엔드포인트를 호출해도 다른 라우트와 동일하게 `{"error":"unauthorized"}`
 - 기존 페이지(`/`, `/calendar.html`, `/diary.html`, `/history.html`, `/wrongnotes.html`)와 기존 API가
   이전과 동일하게 동작
+
+## 3차(Capacitor Android): 자동 테스트 vs 수동 테스트
+
+**`test/capacitor-notification-adapter.test.js`** — Node에서 테스트 가능한 **순수 부분만**
+(`Capacitor.Plugins.LocalNotifications` 네이티브 호출부는 브라우저 브릿지가 없는 Node에서 애초에 불가능):
+
+- 해시 함수(`hashToId`)의 결정성 — 같은 문자열은 항상 같은 32비트 정수
+- `dailyNotificationId`/`snoozeNotificationId`가 같은 goalId에 대해 서로 다른 값
+- `planActionSequence(currentStatus, action)` — `scheduled`에서는 항상 `notified`를 먼저 거침, 이미
+  `notified`/`snoozed`면 요청 액션으로 바로, 현재 상태와 요청 액션이 같으면 빈 배열(무동작)
+- Node/비브라우저 환경에서 `require`하면 순수 함수만 노출되고 `reconcile`/`isAvailable` 등 네이티브
+  호출 함수는 없음(안전하게 no-op)
+
+**Android Studio에서만 확인 가능한 수동 테스트** (실제 기기/에뮬레이터, `docs/ANDROID_SETUP.md` 참고):
+
+- 로그인 → 홈 진입(기존 웹과 동일 동작 회귀 확인)
+- 목표+리마인더 시각(몇 분 뒤)으로 저장 → 알림 권한 요청 다이얼로그 → 허용 → 설정 시각에 실제 알림 도착
+- 알림 "시작" 액션 탭(앱 백그라운드 상태/완전 종료 상태 각각) → 서버 상태가 `started`로 반영되는지,
+  앱을 열면 홈 화면에 반영되는지
+- "5분 미루기" 탭 → 5분 뒤 두 번째(스누즈) 알림이 실제로 도착하는지
+- "오늘 건너뛰기" 탭 → `skipped` 반영, 같은 날 재알림 없음
+- 목표 시각 변경 저장 → 기존 예약 취소 + 새 시각 재예약(다음날 알림으로 간접 확인)
+- 리마인더 토글 끄기 / 목표 삭제 / 목표 완료 처리 → 관련 알림이 실제로 취소되는지
+- 알림 권한을 거부한 상태의 UX(홈 화면 배너), 정확한 알람 권한이 꺼진 상태의 동작(대체 스케줄 + 배너)
+- 며칠 앱을 열지 않다가 재실행했을 때 재조정(reconcile)이 정상 동작하는지
+- 개발용 "지금 테스트" 버튼이 네이티브 앱 안에서도 동작하는지, 프로덕션 빌드에서는 숨겨지는지
+- 기존 캘린더/일기/활동/오답노트/로그인·로그아웃 등 웹 기능 전체가 앱 안에서도 정상 동작하는지 회귀 확인

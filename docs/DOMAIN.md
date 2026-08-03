@@ -84,3 +84,21 @@ missed    -> (없음, 터미널)
 **읽을 때마다** 기본값(`{enabled:false, time:null, timezone:"Asia/Seoul", snoozeMinutes:5,
 maxSnoozeCount:3}`)을 채워 반환한다. 파일은 절대 자동으로 다시 쓰지 않는다 — 마이그레이션/백업 정책은
 `docs/DECISIONS.md` 참고.
+
+## 네이티브 알림(Capacitor/Android) ↔ 도메인 로직 연결
+
+`public/capacitor-notification-adapter.js`(`LifeApp.CapacitorNotificationAdapter`)는 예약/취소/권한확인/
+액션수신/전달로 역할이 한정된 어댑터다. occurrenceKey 생성·상태 전이 규칙을 복제하지 않는다:
+
+- 알림에는 `{goalId}`만 실려 있다. occurrenceKey/실행 기록은 알림이 울리거나 액션을 받은 시점에 항상
+  `GET /api/goal-executions/today`로 새로 조회한다(자세한 이유는 `docs/DECISIONS.md`).
+- 알림 ID는 `hash(goalId + ":daily")`(매일 반복 1개), 스누즈 후속 알림은 `hash(goalId + ":snooze")` —
+  둘 다 문자열을 32비트 정수로 결정적으로 해싱(`hashToId`), 별도 매핑 테이블 없음.
+- 알림 액션(시작/5분 미루기/오늘 건너뛰기) → `started`/`snoozed`/`skipped` 전이 요청. 현재 상태가
+  `scheduled`(앱을 한 번도 안 열어서 서버가 아직 `notified`로 못 바꾼 상태)라면, `scheduled → snoozed`가
+  상태표에 없는 전이이므로 어댑터는 먼저 `scheduled → notified`(항상 유효)를 거친 뒤 요청받은 액션을
+  적용한다 — `planActionSequence(currentStatus, action)`이 이 순서를 결정하는 순수 함수이고,
+  `test/capacitor-notification-adapter.test.js`에서 검증한다. 실제 전이 적용은 여전히 서버
+  `PATCH /:id/transition`이 상태표로 재검증한다.
+- 목표 시각/타임존 변경, 리마인더 비활성화, 목표 완료·삭제는 기존 `home.js`가 쏘는
+  `lifeapp:goal-updated` 이벤트를 어댑터가 구독해서 반영한다(기존 이벤트 재사용, 새 배선 없음).

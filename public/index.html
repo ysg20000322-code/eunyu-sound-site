@@ -209,6 +209,11 @@
   </div>
 </div>
 
+<!-- api-client.js + capacitor-notification-adapter.js load first so the native
+     notification-action listener registers as early as possible (minimizes the
+     race window on a cold start triggered by tapping a notification action). -->
+<script src="api-client.js"></script>
+<script src="capacitor-notification-adapter.js"></script>
 <script src="pwa.js"></script>
 <script src="menu.js"></script>
 <script src="companion.js"></script>

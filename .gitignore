@@ -2,3 +2,10 @@
 .env*
 node_modules
 data/
+
+# Android/Capacitor: build.gradle/.gradle/local.properties/copied web assets
+# are already excluded by android/.gitignore (Capacitor's own template);
+# these are belt-and-suspenders for anything created outside that tree.
+*.keystore
+*.jks
+android/local.properties

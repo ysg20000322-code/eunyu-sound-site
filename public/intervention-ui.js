@@ -25,6 +25,7 @@
     const LifeApp = window.LifeApp || {};
     const engine = requireDep("LifeApp.InterventionEngine", LifeApp.InterventionEngine);
     const messages = requireDep("LifeApp.CompanionMessages", LifeApp.CompanionMessages);
+    const { fetchEnvelope, fetchPlain } = requireDep("LifeApp.ApiClient", LifeApp.ApiClient);
 
     const els = {
       todayAction: document.getElementById("todayAction"),
@@ -57,24 +58,6 @@
     let pollTimer = null;
     let busy = false; // true while a transition/test-trigger request is in flight
     let testTriggerEnabled = false;
-
-    // /api/goal-executions/* is the new router — always {ok,data}/{ok,error:{code,message}}.
-    async function fetchEnvelope(url, options) {
-      const res = await fetch(url, options);
-      const body = await res.json().catch(() => null);
-      if (!res.ok || !body || body.ok === false) {
-        const message = (body && body.error && body.error.message) || `요청 실패 (${res.status})`;
-        throw new Error(message);
-      }
-      return body.data;
-    }
-
-    // /api/goals is one of the existing 8 routers — plain JSON, no envelope.
-    async function fetchPlain(url, options) {
-      const res = await fetch(url, options);
-      if (!res.ok) throw new Error(`요청 실패 (${res.status})`);
-      return res.json();
-    }
 
     function setStatusText(text) {
       els.status.textContent = text || "";

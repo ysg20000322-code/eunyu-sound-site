@@ -25,8 +25,11 @@
 완료 애니메이션, 홈 화면 반영. 여기서 만든 `public/intervention-engine.js`와 `/api/goal-executions` API를
 그대로 재사용하고, 새로 만드는 건 UI/전달 계층뿐이다.
 
-## Capacitor 단계에서 재사용
+## 3차(Capacitor Android + 로컬 알림): 완료
 
-`public/intervention-engine.js`(순수 로직, `Intl`만 사용해 브라우저·WebView 어디서나 동작)와
-`routes/goalExecutions.js` API는 그대로 재사용한다. 바뀌는 건 "전달 방식"뿐 — 인앱 모달 → 웹푸시 →
-Capacitor 로컬 알림 순으로 교체되고, 행동 판단 로직은 손대지 않는다.
+앱을 닫아도 실제 폰 알림이 오도록 Android 전용 셸을 만들고 `@capacitor/local-notifications`를 붙였다.
+`public/intervention-engine.js`/`routes/goalExecutions.js`는 무변경 — 새 파일
+`public/capacitor-notification-adapter.js`가 예약/취소/권한/액션수신만 담당하는 얇은 전달 계층으로
+추가됐다(자세한 구조는 `docs/DOMAIN.md`, 아키텍처 결정은 `docs/DECISIONS.md`). iOS, Web Push, Vercel Cron,
+오버레이/자유이동 캐릭터, LLM 대화, 친밀도·재화·스킨 시스템, 스토어 출시·서명 자동화는 이번에도 제외.
+실제 APK 빌드·알림 수신 확인은 로컬 Android Studio 몫 — `docs/ANDROID_SETUP.md` 참고.

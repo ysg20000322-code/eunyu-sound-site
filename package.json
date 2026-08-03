@@ -5,10 +5,20 @@
   "type": "commonjs",
   "scripts": {
     "start": "node -e \"require('./api/index.js').listen(process.env.PORT || 3000)\"",
-    "test": "node --test"
+    "test": "node --test",
+    "android:sync": "npx cap sync android",
+    "android:open": "npx cap open android"
   },
   "dependencies": {
+    "@capacitor/android": "^6.1.2",
+    "@capacitor/app": "^6.0.1",
+    "@capacitor/core": "^6.1.2",
+    "@capacitor/local-notifications": "^6.1.0",
     "@vercel/blob": "^2.6.1",
     "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.1.2",
+    "typescript": "^5.9.3"
   }
 }
