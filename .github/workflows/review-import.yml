@@ -1,0 +1,75 @@
+name: Review Import Relay
+
+# Manually-triggered relay for registering 조경기사 review problems against the
+# deployed site's POST /api/review/import. Exists because the Claude Code
+# session that analyzes screenshots and builds the problem JSON runs under a
+# network policy that cannot reach the production domain directly, while
+# GitHub-hosted runners can. Also supports a read-only "verify" action to
+# confirm data landed without needing separate network access either.
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "import (문제 등록) 또는 verify (등록 결과 조회)"
+        required: true
+        type: choice
+        options:
+          - import
+          - verify
+      problem_json:
+        description: "action=import일 때: 문제 JSON (scripts/import-review-problem.mjs 입력 형식). action=verify일 때는 무시됨"
+        required: false
+        type: string
+        default: ""
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Import problem
+        if: ${{ inputs.action == 'import' }}
+        env:
+          REVIEW_SITE_URL: ${{ secrets.REVIEW_SITE_URL }}
+          REVIEW_IMPORT_TOKEN: ${{ secrets.REVIEW_IMPORT_TOKEN }}
+          PROBLEM_JSON: ${{ inputs.problem_json }}
+        shell: bash
+        run: |
+          set -o pipefail
+          printf '%s' "$PROBLEM_JSON" | node scripts/import-review-problem.mjs 2>&1 | tee "$GITHUB_STEP_SUMMARY"
+
+      - name: Verify review data
+        if: ${{ inputs.action == 'verify' }}
+        env:
+          REVIEW_SITE_URL: ${{ secrets.REVIEW_SITE_URL }}
+        shell: bash
+        run: |
+          set -o pipefail
+          node -e "
+            (async () => {
+              const url = new URL('/api/review', process.env.REVIEW_SITE_URL);
+              const res = await fetch(url);
+              if (!res.ok) {
+                console.error('GET /api/review failed:', res.status);
+                process.exit(1);
+              }
+              const list = await res.json();
+              const bySubject = {};
+              for (const p of list) bySubject[p.subject] = (bySubject[p.subject] || 0) + 1;
+              console.log(JSON.stringify({
+                total: list.length,
+                bySubject,
+                important: list.filter((p) => p.important).length,
+                mastered: list.filter((p) => p.mastered).length,
+              }, null, 2));
+              console.log('--- all problems (id / subject / questionNumber / question) ---');
+              for (const p of list) {
+                console.log(p.id, '|', p.subject, '|', p.questionNumber, '|', p.question.slice(0, 40));
+              }
+            })().catch((err) => { console.error(err); process.exit(1); });
+          " 2>&1 | tee "$GITHUB_STEP_SUMMARY"
