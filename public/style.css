@@ -818,6 +818,10 @@ textarea, input[type="text"], input[type="password"], .num-input {
   gap: 10px;
 }
 
+.intervention-actions[hidden] {
+  display: none;
+}
+
 .intervention-actions button {
   min-height: 46px;
   font-size: 1rem;
