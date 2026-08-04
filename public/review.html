@@ -22,21 +22,42 @@
   </nav>
 
   <header class="topbar">
-    <h1>문제 복습</h1>
-    <p class="hint">틀린 문제를 과목별로 올려두고, 골라서 다시 풀어보세요.</p>
+    <h1>문제 복습 (조경기사)</h1>
+    <p class="hint">Claude에게 오답 스크린샷을 보내면 자동으로 등록돼요. 여기서는 문제를 확인하고 다시 풀어보세요.</p>
   </header>
 
   <main>
     <section class="card">
-      <h2>풀어보기</h2>
-      <div class="review-filter-row">
-        <label for="subjectFilter">과목</label>
-        <select id="subjectFilter">
-          <option value="">전체</option>
-        </select>
-        <button id="startBtn" class="save-btn">시작하기</button>
+      <div class="stat-tiles">
+        <div class="stat-tile">
+          <span class="stat-num" id="statTotal">0</span>
+          <span class="stat-label">등록된 문제</span>
+        </div>
+        <div class="stat-tile stat-tile-important">
+          <span class="stat-num" id="statImportant">0</span>
+          <span class="stat-label">중요 문제</span>
+        </div>
+        <div class="stat-tile stat-tile-unmastered">
+          <span class="stat-num" id="statUnmastered">0</span>
+          <span class="stat-label">미숙달 문제</span>
+        </div>
       </div>
-      <div id="quizEmpty" class="hint" hidden>이 과목에는 등록된 문제가 없어요. 아래에서 문제를 추가해보세요.</div>
+    </section>
+
+    <section class="card">
+      <h2>테스트 시작하기</h2>
+      <div class="quiz-launcher">
+        <button id="startAllBtn" class="btn-secondary">전체 오답 테스트</button>
+        <button id="startImportantBtn" class="btn-secondary">중요 문제 테스트</button>
+        <div class="quiz-launcher-subject">
+          <select id="subjectFilter">
+            <option value="">과목 선택</option>
+          </select>
+          <button id="startSubjectBtn" class="btn-secondary">과목별 테스트</button>
+        </div>
+      </div>
+
+      <div id="quizEmpty" class="hint" hidden>선택한 범위에 등록된 문제가 없어요.</div>
       <div id="quizArea" hidden>
         <div class="quiz-progress">
           <span id="quizProgress"></span>
@@ -44,7 +65,6 @@
         </div>
         <div id="quizSource" class="quiz-source"></div>
         <div id="quizQuestion" class="quiz-question"></div>
-        <div id="quizContext" class="quiz-context"></div>
         <div id="quizChoices" class="quiz-choices"></div>
         <div id="quizExplanation" class="quiz-explanation" hidden></div>
         <div class="quiz-actions">
@@ -57,48 +77,106 @@
           <button id="quizRetryAll" class="btn-secondary">같은 범위 다시 풀기</button>
           <button id="quizRetryWrong" class="btn-secondary" hidden>틀린 문제만 다시 풀기</button>
         </div>
+        <div id="quizHistory" class="quiz-history"></div>
       </div>
     </section>
 
     <section class="card">
-      <h2>문제 추가</h2>
-      <div class="activity-form">
-        <div>
-          <label for="fSubject">과목 (선택)</label>
-          <input type="text" id="fSubject" list="subjectList" placeholder="예: 수질오염개론">
-          <datalist id="subjectList"></datalist>
-        </div>
-        <div>
-          <label for="fSource">출처 (선택)</label>
-          <input type="text" id="fSource" placeholder="예: 2021년 09월 12일 기출문제 94번">
-        </div>
-        <div>
-          <label for="fQuestion">문제 *</label>
-          <textarea id="fQuestion" rows="3" placeholder="문제 지문을 입력하세요"></textarea>
-        </div>
-        <div>
-          <label for="fContext">보기/조건 (선택)</label>
-          <textarea id="fContext" rows="3" placeholder="표나 추가 조건이 있으면 입력하세요"></textarea>
-        </div>
-        <div>
-          <label>선택지 * (정답 라디오 버튼 선택)</label>
-          <div id="choiceRows" class="choice-rows"></div>
-          <button id="addChoiceBtn" class="btn-secondary" type="button" style="margin-top:6px;">선택지 추가</button>
-        </div>
-        <div>
-          <label for="fExplanation">해설 (선택)</label>
-          <textarea id="fExplanation" rows="3" placeholder="풀이 및 해설을 입력하세요"></textarea>
-        </div>
+      <h2>문제 목록 (<span id="listCount">0</span>)</h2>
+      <div class="review-filter-row">
+        <label for="listSubjectFilter">과목</label>
+        <select id="listSubjectFilter">
+          <option value="">전체</option>
+        </select>
+        <label class="checkbox-label"><input type="checkbox" id="listImportantOnly"> 중요만</label>
+        <label class="checkbox-label"><input type="checkbox" id="listUnmasteredOnly"> 미숙달만</label>
       </div>
-      <button id="addBtn" class="save-btn">복습 문제로 추가</button>
-      <span id="addStatus" class="save-status"></span>
-    </section>
-
-    <section class="card">
-      <h2>전체 목록 (<span id="listCount">0</span>)</h2>
       <div id="noteList" class="activity-list"></div>
     </section>
+
+    <section class="card">
+      <details id="manualAddDetails">
+        <summary>직접 문제 추가 (보조 기능)</summary>
+        <div class="activity-form" style="margin-top:10px;">
+          <div>
+            <label for="fSubject">과목 *</label>
+            <select id="fSubject">
+              <option value="">선택하세요</option>
+            </select>
+          </div>
+          <div class="form-row-2">
+            <div>
+              <label for="fExamDate">시험일 (선택)</label>
+              <input type="date" id="fExamDate">
+            </div>
+            <div>
+              <label for="fQuestionNumber">문제 번호 (선택)</label>
+              <input type="text" inputmode="numeric" id="fQuestionNumber" placeholder="예: 41">
+            </div>
+          </div>
+          <div>
+            <label for="fExamLabel">출처 표시 (선택)</label>
+            <input type="text" id="fExamLabel" placeholder="예: 2021년 5월 15일 기출문제">
+          </div>
+          <div>
+            <label for="fQuestion">문제 *</label>
+            <textarea id="fQuestion" rows="3" placeholder="문제 지문을 입력하세요"></textarea>
+          </div>
+          <div>
+            <label>선택지 * (4개, 정답 라디오 버튼 선택)</label>
+            <div id="choiceRows" class="choice-rows"></div>
+          </div>
+          <div>
+            <label for="fExplanation">해설 (선택)</label>
+            <textarea id="fExplanation" rows="3" placeholder="풀이 및 해설을 입력하세요"></textarea>
+          </div>
+        </div>
+        <button id="addBtn" class="save-btn">문제 추가</button>
+        <span id="addStatus" class="save-status"></span>
+      </details>
+    </section>
   </main>
+</div>
+
+<div id="editOverlay" class="modal-overlay" hidden>
+  <div class="modal">
+    <button id="editClose" class="modal-close" aria-label="닫기">×</button>
+    <h3>문제 수정</h3>
+    <div class="activity-form">
+      <div>
+        <label for="eSubject">과목 *</label>
+        <select id="eSubject"></select>
+      </div>
+      <div class="form-row-2">
+        <div>
+          <label for="eExamDate">시험일 (선택)</label>
+          <input type="date" id="eExamDate">
+        </div>
+        <div>
+          <label for="eQuestionNumber">문제 번호 (선택)</label>
+          <input type="text" inputmode="numeric" id="eQuestionNumber">
+        </div>
+      </div>
+      <div>
+        <label for="eExamLabel">출처 표시 (선택)</label>
+        <input type="text" id="eExamLabel">
+      </div>
+      <div>
+        <label for="eQuestion">문제 *</label>
+        <textarea id="eQuestion" rows="3"></textarea>
+      </div>
+      <div>
+        <label>선택지 * (4개, 정답 라디오 버튼 선택)</label>
+        <div id="eChoiceRows" class="choice-rows"></div>
+      </div>
+      <div>
+        <label for="eExplanation">해설 (선택)</label>
+        <textarea id="eExplanation" rows="3"></textarea>
+      </div>
+    </div>
+    <button id="eSaveBtn" class="save-btn">저장</button>
+    <span id="eStatus" class="save-status"></span>
+  </div>
 </div>
 
 <script src="pwa.js"></script>
