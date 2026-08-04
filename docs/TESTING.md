@@ -81,10 +81,16 @@ curl -s -b "$COOKIE" "http://localhost:3000/api/settings"
 - `dailyNotificationId`/`snoozeNotificationId`가 같은 goalId에 대해 서로 다른 값
 - `planActionSequence(currentStatus, action)` — `scheduled`에서는 항상 `notified`를 먼저 거침, 이미
   `notified`/`snoozed`면 요청 액션으로 바로, 현재 상태와 요청 액션이 같으면 빈 배열(무동작)
+- `buildDailyExtra`/`buildSnoozeExtra` — 알림 `extra` 페이로드 모양(`kind`/`goalId`/`scheduleVersion`/
+  `occurrenceKey` 등)이 `docs/ANDROID_ARCHITECTURE.md`에 정의된 스키마와 일치하는지
+- `isStaleAction(notificationVersion, currentVersion)` — 버전이 다르면 true, 둘 중 하나라도
+  없으면(레거시 알림) fail-open으로 false
+- `shouldStopRetrying(retryCount)` — `MAX_RETRY_COUNT`(5) 미만은 false, 이상은 true
 - Node/비브라우저 환경에서 `require`하면 순수 함수만 노출되고 `reconcile`/`isAvailable` 등 네이티브
   호출 함수는 없음(안전하게 no-op)
 
-**Android Studio에서만 확인 가능한 수동 테스트** (실제 기기/에뮬레이터, `docs/ANDROID_SETUP.md` 참고):
+**Android Studio에서만 확인 가능한 수동 테스트** — 아래는 요약이고, 전체 체크리스트(재현 절차/기대
+결과/실제 결과/통과 여부/로그를 항목별로 기록)는 `docs/ANDROID_DEVICE_TEST.md` 참고:
 
 - 로그인 → 홈 진입(기존 웹과 동일 동작 회귀 확인)
 - 목표+리마인더 시각(몇 분 뒤)으로 저장 → 알림 권한 요청 다이얼로그 → 허용 → 설정 시각에 실제 알림 도착
@@ -97,4 +103,8 @@ curl -s -b "$COOKIE" "http://localhost:3000/api/settings"
 - 알림 권한을 거부한 상태의 UX(홈 화면 배너), 정확한 알람 권한이 꺼진 상태의 동작(대체 스케줄 + 배너)
 - 며칠 앱을 열지 않다가 재실행했을 때 재조정(reconcile)이 정상 동작하는지
 - 개발용 "지금 테스트" 버튼이 네이티브 앱 안에서도 동작하는지, 프로덕션 빌드에서는 숨겨지는지
+- 목표 시각을 바꾼 뒤 변경 전 알림(아직 화면에 남아있는)의 액션을 눌러도 GoalExecution이 안 바뀌고
+  "이전 일정" 배너만 뜨는지(`scheduleVersion` 방어)
+- 기내 모드에서 알림 액션을 누른 뒤 네트워크를 복구하면 앱 재개 시 자동으로 서버에 반영되는지(오프라인
+  큐 재시도)
 - 기존 캘린더/일기/활동/오답노트/로그인·로그아웃 등 웹 기능 전체가 앱 안에서도 정상 동작하는지 회귀 확인

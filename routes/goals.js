@@ -42,7 +42,15 @@ router.patch("/", async (req, res) => {
     if ("time" in b && b.time !== null && !BEHAVIOR_TIME_RE.test(b.time)) {
       return res.status(400).json({ error: "behavior.time must be HH:mm" });
     }
+    // scheduleVersion only bumps when the schedule itself changes (time/timezone) —
+    // not for title/note/snoozeMinutes/maxSnoozeCount edits. Native notifications
+    // carry the version they were scheduled under so a stale one (from before this
+    // change) can recognize itself as outdated. See docs/ANDROID_ARCHITECTURE.md.
+    const scheduleChanged =
+      ("time" in b && b.time !== goal.behavior.time) ||
+      ("timezone" in b && b.timezone !== goal.behavior.timezone);
     goal.behavior = { ...goal.behavior, ...b };
+    if (scheduleChanged) goal.behavior.scheduleVersion = (goal.behavior.scheduleVersion || 1) + 1;
   }
 
   await writeJSON("goals", goal);

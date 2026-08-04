@@ -9,11 +9,15 @@
  * and applies transitions through the same PATCH endpoint the in-app modal
  * uses (routes/goalExecutions.js, public/intervention-engine.js).
  *
- * The pure helpers (hashing, action-sequence planning) have no dependency on
- * `window`/`Capacitor` and are exported for both Node (`require`, see
+ * The pure helpers (hashing, action-sequence planning, staleness/retry
+ * decisions, extra-payload shape) have no dependency on `window`/`Capacitor`
+ * and are exported for both Node (`require`, see
  * test/capacitor-notification-adapter.test.js) and the browser. Everything
  * past that point only runs when `Capacitor.isNativePlatform()` is true; in
  * a normal desktop browser (or Node) this module is a no-op.
+ *
+ * See docs/ANDROID_ARCHITECTURE.md for the scheduleVersion / stale-notification
+ * / offline-action-queue design this file implements.
  */
 (function (root, factory) {
   if (typeof module === "object" && module.exports) {
@@ -24,6 +28,8 @@
   }
 })(typeof self !== "undefined" ? self : this, function (root) {
   "use strict";
+
+  const MAX_RETRY_COUNT = 5;
 
   // ---- pure helpers: deterministic, no platform APIs, unit-testable ----
 
@@ -57,7 +63,52 @@
     return [action];
   }
 
-  const pure = { hashToId, dailyNotificationId, snoozeNotificationId, planActionSequence };
+  // extra payloads carried by each scheduled notification. `kind` lets a
+  // future action handler tell them apart without guessing; scheduleVersion
+  // is what lets a stale notification (scheduled before the goal's time/
+  // timezone last changed) recognize itself as outdated.
+  function buildDailyExtra(goal) {
+    return {
+      kind: "daily-reminder",
+      goalId: goal.id,
+      scheduleVersion: goal.behavior.scheduleVersion,
+      nominalTime: goal.behavior.time,
+      timezone: goal.behavior.timezone,
+    };
+  }
+
+  function buildSnoozeExtra(goal, occurrenceKey) {
+    return {
+      kind: "snooze",
+      goalId: goal.id,
+      occurrenceKey,
+      scheduleVersion: goal.behavior.scheduleVersion,
+    };
+  }
+
+  // A notification's baked-in scheduleVersion vs. the goal's current one.
+  // Missing/unknown versions (legacy notifications scheduled before this
+  // field existed) fail open — never treated as stale.
+  function isStaleAction(notificationVersion, currentVersion) {
+    if (notificationVersion == null || currentVersion == null) return false;
+    return notificationVersion !== currentVersion;
+  }
+
+  function shouldStopRetrying(retryCount) {
+    return retryCount >= MAX_RETRY_COUNT;
+  }
+
+  const pure = {
+    MAX_RETRY_COUNT,
+    hashToId,
+    dailyNotificationId,
+    snoozeNotificationId,
+    planActionSequence,
+    buildDailyExtra,
+    buildSnoozeExtra,
+    isStaleAction,
+    shouldStopRetrying,
+  };
 
   if (!root || !root.document) {
     // Node or another non-browser context: only the pure helpers are usable.
@@ -79,45 +130,129 @@
     return `goal-actions-${goalId}`;
   }
 
-  async function applyNotificationAction(goalId, action) {
-    const ApiClient = root.LifeApp && root.LifeApp.ApiClient;
-    if (!ApiClient) {
-      console.error("[capacitor-notification-adapter] LifeApp.ApiClient missing — is api-client.js loaded first?");
-      return;
-    }
-    try {
-      const execution = await ApiClient.fetchEnvelope(
-        `/api/goal-executions/today?goalId=${encodeURIComponent(goalId)}`
-      );
-      if (!execution) return; // reminder was disabled/removed after the notification was scheduled
+  // ---- offline-safe local action queue (localStorage; no new dependency) ----
+  //
+  // A notification action is persisted here BEFORE any network call is made,
+  // and only removed once the server has confirmed it. This is what makes a
+  // tap survive "no network right now" instead of silently vanishing — the
+  // previous version of this file just logged and dropped it.
 
-      let current = execution;
-      for (const to of pure.planActionSequence(execution.status, action)) {
-        current = await ApiClient.fetchEnvelope(`/api/goal-executions/${current.id}/transition`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ to, source: "notification" }),
-        }).catch((err) => {
-          // e.g. today's goal was already resolved through the in-app modal in the
-          // meantime — the transition table will reject it, which is fine, nothing
-          // left to do.
-          console.warn("[capacitor-notification-adapter] transition to", to, "rejected:", err.message);
-          return current;
-        });
-      }
+  const QUEUE_KEY = "lifeapp.pendingNotificationActions";
+
+  function readQueue() {
+    try {
+      const raw = root.localStorage.getItem(QUEUE_KEY);
+      return raw ? JSON.parse(raw) : [];
     } catch (err) {
-      console.error("[capacitor-notification-adapter] failed to apply notification action:", err);
-    } finally {
+      return [];
+    }
+  }
+
+  function writeQueue(queue) {
+    try {
+      root.localStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
+    } catch (err) {
+      console.error("[capacitor-notification-adapter] failed to persist action queue:", err);
+    }
+  }
+
+  function enqueueAction(entry) {
+    const queue = readQueue();
+    queue.push(entry);
+    writeQueue(queue);
+  }
+
+  let processingQueue = false;
+
+  // Drains the pending-action queue against the server. Safe to call
+  // repeatedly/concurrently (guarded by `processingQueue`) — called right
+  // after an action is enqueued, and again on every app resume/launch so a
+  // tap made while offline gets retried once connectivity is back.
+  async function processQueue() {
+    if (processingQueue) return;
+    processingQueue = true;
+    try {
+      const ApiClient = root.LifeApp && root.LifeApp.ApiClient;
+      if (!ApiClient) return;
+
+      const queue = readQueue();
+      if (queue.length === 0) return;
+
+      let currentGoal;
+      try {
+        currentGoal = await ApiClient.fetchPlain("/api/goals");
+      } catch (err) {
+        return; // offline — leave the queue untouched, try again next resume
+      }
+      const currentVersion = currentGoal && currentGoal.behavior && currentGoal.behavior.scheduleVersion;
+
+      let sawStale = false;
+      let sawGaveUp = false;
+      const remaining = [];
+
+      for (const item of queue) {
+        if (pure.isStaleAction(item.scheduleVersion, currentVersion)) {
+          sawStale = true;
+          continue; // dropped — superseded by a newer schedule, never touches GoalExecution
+        }
+
+        try {
+          const execution = await ApiClient.fetchEnvelope(
+            `/api/goal-executions/today?goalId=${encodeURIComponent(item.goalId)}`
+          );
+          if (execution) {
+            let current = execution;
+            for (const to of pure.planActionSequence(execution.status, item.action)) {
+              current = await ApiClient.fetchEnvelope(`/api/goal-executions/${current.id}/transition`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ to, source: "notification" }),
+              });
+            }
+          }
+          // success (or nothing left to do) — falls through, item is dropped
+        } catch (err) {
+          const retryCount = item.retryCount + 1;
+          if (pure.shouldStopRetrying(retryCount)) sawGaveUp = true;
+          remaining.push({ ...item, retryCount, lastError: err.message });
+        }
+      }
+
+      writeQueue(remaining);
+
+      if (sawStale) {
+        showBanner("이전 일정의 알림이었어요. 최신 일정으로 갱신할게요.", "확인", hideBanner);
+        await reconcile();
+      } else if (sawGaveUp) {
+        showBanner("일부 알림 응답을 서버에 반영하지 못했어요. 앱을 열어두면 다시 시도해요.", "확인", hideBanner);
+      }
+
       root.document.dispatchEvent(new root.CustomEvent("lifeapp:goal-updated"));
+    } finally {
+      processingQueue = false;
     }
   }
 
   // Register as early as possible (top-level, not waiting for DOMContentLoaded)
   // so a cold start triggered by tapping a notification action isn't missed.
+  // The action is enqueued synchronously — the actual network attempt
+  // (processQueue) can fail without losing the tap.
   LocalNotifications.addListener("localNotificationActionPerformed", (event) => {
-    const goalId = event && event.notification && event.notification.extra && event.notification.extra.goalId;
+    const extra = event && event.notification && event.notification.extra;
+    const goalId = extra && extra.goalId;
     const target = event && ACTION_TARGETS[event.actionId];
-    if (goalId && target) applyNotificationAction(goalId, target);
+    if (!goalId || !target) return;
+
+    enqueueAction({
+      id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      goalId,
+      action: target,
+      scheduleVersion: extra && extra.scheduleVersion,
+      kind: extra && extra.kind,
+      actedAt: new Date().toISOString(),
+      retryCount: 0,
+    });
+    processQueue();
   });
 
   async function ensurePermissions() {
@@ -169,8 +304,10 @@
     await cancelSnooze(goalId);
   }
 
-  // Returns { granted, exactAlarmAllowed } so the caller (home.js's goal-save
-  // handler, in a later change) can surface a banner when either is false.
+  // Returns { granted, exactAlarmAllowed } so the caller can surface a banner
+  // when either is false. `schedule.on:{hour,minute}` recurs natively every
+  // day in the device's current timezone — see docs/DECISIONS.md for the
+  // known limitation when that differs from goal.behavior.timezone.
   async function scheduleDaily(goal) {
     const granted = await ensurePermissions();
     if (!granted) return { granted: false, exactAlarmAllowed: false };
@@ -187,29 +324,34 @@
           body: `"${goal.title}" 시작할 시간이에요!`,
           schedule: { on: { hour, minute }, allowWhileIdle: true },
           actionTypeId: actionTypeId(goal.id),
-          extra: { goalId: goal.id },
+          extra: pure.buildDailyExtra(goal),
         },
       ],
     });
     return { granted: true, exactAlarmAllowed };
   }
 
-  async function scheduleSnooze(goal, nextInterventionAt) {
+  // `execution` is today's GoalExecution (already fetched by the caller) so
+  // the snooze notification can carry its occurrenceKey.
+  async function scheduleSnooze(goal, execution) {
     await LocalNotifications.schedule({
       notifications: [
         {
           id: pure.snoozeNotificationId(goal.id),
           title: "오늘의 행동",
+          // Approximate on purpose — Doze/battery optimization can delay a
+          // 5-minute alarm by a few minutes on real devices, so the copy
+          // shouldn't promise more precision than Android actually gives us.
           body: `"${goal.title}" 다시 확인할 시간이에요!`,
-          schedule: { at: new Date(nextInterventionAt), allowWhileIdle: true },
+          schedule: { at: new Date(execution.nextInterventionAt), allowWhileIdle: true },
           actionTypeId: actionTypeId(goal.id),
-          extra: { goalId: goal.id },
+          extra: pure.buildSnoozeExtra(goal, execution.occurrenceKey),
         },
       ],
     });
   }
 
-  // ---- minimal self-contained permission banner (no index.html/CSS changes needed) ----
+  // ---- minimal self-contained banner (no index.html/CSS changes needed) ----
 
   let bannerEl = null;
 
@@ -291,7 +433,7 @@
     try {
       const execution = await ApiClient.fetchEnvelope(`/api/goal-executions/today?goalId=${encodeURIComponent(goal.id)}`);
       if (execution && execution.status === "snoozed" && execution.nextInterventionAt) {
-        await scheduleSnooze(goal, execution.nextInterventionAt);
+        await scheduleSnooze(goal, execution);
       } else {
         await cancelSnooze(goal.id);
       }
@@ -300,11 +442,15 @@
     }
   }
 
+  function onAppActive(staleGoalHint) {
+    processQueue().finally(() => reconcile(staleGoalHint));
+  }
+
   if (CapApp) {
-    CapApp.addListener("resume", () => reconcile());
+    CapApp.addListener("resume", () => onAppActive());
   }
   root.document.addEventListener("lifeapp:goal-updated", (event) => reconcile(event && event.detail));
-  root.document.addEventListener("DOMContentLoaded", () => reconcile());
+  root.document.addEventListener("DOMContentLoaded", () => onAppActive());
 
   return Object.assign({}, pure, {
     isAvailable: () => true,
@@ -315,5 +461,6 @@
     scheduleSnooze,
     cancelAll,
     reconcile,
+    processQueue,
   });
 });

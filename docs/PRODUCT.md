@@ -25,11 +25,24 @@
 완료 애니메이션, 홈 화면 반영. 여기서 만든 `public/intervention-engine.js`와 `/api/goal-executions` API를
 그대로 재사용하고, 새로 만드는 건 UI/전달 계층뿐이다.
 
-## 3차(Capacitor Android + 로컬 알림): 완료
+## 3차(Capacitor Android + 로컬 알림): 자동 테스트 통과, **실기기 미검증**
 
 앱을 닫아도 실제 폰 알림이 오도록 Android 전용 셸을 만들고 `@capacitor/local-notifications`를 붙였다.
 `public/intervention-engine.js`/`routes/goalExecutions.js`는 무변경 — 새 파일
 `public/capacitor-notification-adapter.js`가 예약/취소/권한/액션수신만 담당하는 얇은 전달 계층으로
 추가됐다(자세한 구조는 `docs/DOMAIN.md`, 아키텍처 결정은 `docs/DECISIONS.md`). iOS, Web Push, Vercel Cron,
 오버레이/자유이동 캐릭터, LLM 대화, 친밀도·재화·스킨 시스템, 스토어 출시·서명 자동화는 이번에도 제외.
-실제 APK 빌드·알림 수신 확인은 로컬 Android Studio 몫 — `docs/ANDROID_SETUP.md` 참고.
+
+**"완료"와 "검증 완료"를 구분한다**: `npm test`(자동 테스트)와 데스크톱 브라우저 스모크는 통과했지만,
+이 원격 개발 환경엔 Android SDK가 없어 실제 APK 빌드·알림 수신·권한 플로우는 **아직 실기기에서 확인된
+적이 없다.** `docs/ANDROID_DEVICE_TEST.md`의 체크리스트가 전부 통과로 채워지기 전까지는 "Android 기능
+완료"로 간주하지 않는다 — 로컬 Android Studio에서 `docs/ANDROID_SETUP.md` 절차대로 진행 필요.
+
+## 3.5차(외부 검토 반영): scheduleVersion, 알림 extra 확장, 오프라인 액션 큐
+
+ChatGPT 검토를 반영해 3차의 알림 전달 계층만 보완했다(GoalExecution/occurrenceKey/상태전이/
+InterventionEngine 구조는 무변경): 알림 `extra`에 `kind`/`scheduleVersion`/`occurrenceKey` 추가, 목표
+시각 변경 후 남아있는 오래된 알림이 GoalExecution을 잘못 바꾸지 못하게 방어, 오프라인 상태에서 누른
+알림 액션을 `localStorage` 큐에 보존했다가 재시도. `server.url` 방식이 스토어 출시용 구조가 아니라는
+점을 `docs/ANDROID_ARCHITECTURE.md`에 명시했다. 실기기 테스트 체크리스트는
+`docs/ANDROID_DEVICE_TEST.md`에 정리(전부 미검증 상태로 시작).

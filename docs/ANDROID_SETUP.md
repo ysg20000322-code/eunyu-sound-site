@@ -4,6 +4,10 @@
 (`android/`)까지만 생성하고 설정 파일·권한·알림 코드를 준비해뒀다. **실제 APK 빌드, 에뮬레이터/실기기
 실행, 알림 수신 확인은 아래 절차대로 로컬 Android Studio에서 진행한다.**
 
+앱을 빌드해 설치한 뒤엔 `docs/ANDROID_DEVICE_TEST.md`의 체크리스트를 채워가며 검증한다. 아키텍처 결정
+(왜 `server.url` 방식인지, 알림 ID/`scheduleVersion`/오프라인 큐 구조)은 `docs/ANDROID_ARCHITECTURE.md`
+참고.
+
 ## 0. 필요한 것
 
 - [Android Studio](https://developer.android.com/studio) 최신 버전(설치 시 Android SDK, 플랫폼 툴, 최소

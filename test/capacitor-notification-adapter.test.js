@@ -42,3 +42,42 @@ test("in a non-browser environment only the pure helpers are exposed", () => {
   assert.equal(typeof adapter.isAvailable, "undefined");
   assert.equal(typeof adapter.reconcile, "undefined");
 });
+
+test("buildDailyExtra carries kind/goalId/scheduleVersion/nominalTime/timezone", () => {
+  const goal = { id: "goal-123", behavior: { time: "19:00", timezone: "Asia/Seoul", scheduleVersion: 3 } };
+  assert.deepEqual(adapter.buildDailyExtra(goal), {
+    kind: "daily-reminder",
+    goalId: "goal-123",
+    scheduleVersion: 3,
+    nominalTime: "19:00",
+    timezone: "Asia/Seoul",
+  });
+});
+
+test("buildSnoozeExtra carries kind/goalId/occurrenceKey/scheduleVersion", () => {
+  const goal = { id: "goal-123", behavior: { scheduleVersion: 3 } };
+  assert.deepEqual(adapter.buildSnoozeExtra(goal, "goal-123:2026-08-03:19:00"), {
+    kind: "snooze",
+    goalId: "goal-123",
+    occurrenceKey: "goal-123:2026-08-03:19:00",
+    scheduleVersion: 3,
+  });
+});
+
+test("isStaleAction: true only when both versions are known and differ", () => {
+  assert.equal(adapter.isStaleAction(2, 3), true);
+  assert.equal(adapter.isStaleAction(3, 3), false);
+});
+
+test("isStaleAction: fails open (not stale) when either version is unknown — legacy notifications", () => {
+  assert.equal(adapter.isStaleAction(undefined, 3), false);
+  assert.equal(adapter.isStaleAction(2, undefined), false);
+  assert.equal(adapter.isStaleAction(null, null), false);
+});
+
+test("shouldStopRetrying: false below the cap, true at/after it", () => {
+  assert.equal(adapter.shouldStopRetrying(0), false);
+  assert.equal(adapter.shouldStopRetrying(adapter.MAX_RETRY_COUNT - 1), false);
+  assert.equal(adapter.shouldStopRetrying(adapter.MAX_RETRY_COUNT), true);
+  assert.equal(adapter.shouldStopRetrying(adapter.MAX_RETRY_COUNT + 1), true);
+});
