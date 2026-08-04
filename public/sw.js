@@ -1,7 +1,8 @@
-const CACHE_NAME = "life-site-v1";
+const CACHE_NAME = "life-site-v3";
 const STATIC_ASSETS = [
-  "/", "/calendar.html", "/history.html", "/diary.html",
-  "/style.css", "/app.js", "/calendar.js", "/history.js", "/diary.js", "/pwa.js",
+  "/", "/calendar.html", "/history.html", "/diary.html", "/wrongnotes.html", "/login.html",
+  "/style.css", "/calendar.js", "/history.js", "/diary.js", "/wrongnotes.js", "/login.js",
+  "/pwa.js", "/menu.js", "/home.js", "/companion.js",
   "/manifest.json", "/icon.svg",
 ];
 

@@ -14,6 +14,14 @@ function initMenu() {
     if (a.getAttribute("href") === location.pathname) a.classList.add("active");
   });
 
+  const logoutBtn = document.getElementById("logoutBtn");
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", async () => {
+      await fetch("/api/logout", { method: "POST" });
+      location.href = "/login.html";
+    });
+  }
+
   const themeToggle = document.getElementById("themeToggle");
   if (themeToggle) {
     const current = localStorage.getItem("theme") || "dark";

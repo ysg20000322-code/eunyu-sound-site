@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">내 인생 정리</string>
+    <string name="title_activity_main">내 인생 정리</string>
+    <string name="package_name">com.eunyusound.lifeorganizer</string>
+    <string name="custom_url_scheme">com.eunyusound.lifeorganizer</string>
+</resources>

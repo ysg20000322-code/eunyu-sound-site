@@ -19,20 +19,48 @@
   </header>
 
   <main>
-    <div class="tile-grid">
-      <a href="/calendar.html" class="tile">
+    <section class="card goal-card">
+      <div id="goalEmpty">
+        <h2>목표</h2>
+        <p class="hint">아직 목표가 없어요. 큰 목표를 하나 정해볼까요?</p>
+        <button id="goalSetBtn" class="save-btn">목표 정하기</button>
+      </div>
+
+      <div id="goalFilled" hidden>
+        <div class="goal-header-row">
+          <h2 id="goalTitle"></h2>
+          <button id="goalEditBtn" class="btn-secondary">수정</button>
+        </div>
+        <div class="goal-progress"><div id="goalProgressBar" class="goal-progress-bar"></div></div>
+        <div id="goalMilestones" class="goal-milestones"></div>
+        <div class="coach-box">
+          <span id="companionAvatar" class="coach-emoji"></span>
+          <span id="companionBubble" class="coach-text"></span>
+        </div>
+        <div id="todayAction" class="today-action" hidden>
+          <div class="today-action-row">
+            <span id="todayActionText" class="today-action-text"></span>
+            <button id="todayActionBtn" class="btn-secondary" hidden></button>
+          </div>
+          <button id="testTriggerBtn" class="btn-secondary today-test-btn" hidden>지금 테스트</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="tile-grid" id="tileGrid">
+      <a href="/calendar.html" class="tile" data-module="calendar">
         <span class="tile-emoji">📅</span>
         <span>캘린더</span>
       </a>
-      <a href="/diary.html" class="tile">
+      <a href="/diary.html" class="tile" data-module="diary">
         <span class="tile-emoji">📔</span>
         <span>일기</span>
       </a>
-      <a href="/history.html" class="tile">
+      <a href="/history.html" class="tile" data-module="history">
         <span class="tile-emoji">🏅</span>
         <span>활동</span>
       </a>
-      <a href="/wrongnotes.html" class="tile">
+      <a href="/wrongnotes.html" class="tile" data-module="wrongnotes">
         <span class="tile-emoji">📝</span>
         <span>오답노트</span>
       </a>
@@ -41,10 +69,6 @@
         <span>빠른 추가</span>
       </button>
     </div>
-
-    <p class="hint" style="margin-top:20px; text-align:center;">
-      <a href="/checkin.html">오늘 체크인 화면 열기 →</a>
-    </p>
   </main>
 </div>
 
@@ -56,11 +80,10 @@
     </div>
     <ul class="menu-list">
       <li><a href="/" data-nav>홈</a></li>
-      <li><a href="/calendar.html" data-nav>캘린더</a></li>
-      <li><a href="/diary.html" data-nav>일기</a></li>
-      <li><a href="/history.html" data-nav>활동 이력</a></li>
-      <li><a href="/wrongnotes.html" data-nav>오답노트</a></li>
-      <li><a href="/checkin.html" data-nav>오늘 체크인</a></li>
+      <li data-module-item="calendar"><a href="/calendar.html" data-nav>캘린더</a></li>
+      <li data-module-item="diary"><a href="/diary.html" data-nav>일기</a></li>
+      <li data-module-item="history"><a href="/history.html" data-nav>활동 이력</a></li>
+      <li data-module-item="wrongnotes"><a href="/wrongnotes.html" data-nav>오답노트</a></li>
     </ul>
     <div class="menu-section-title">설정</div>
     <div class="theme-row">
@@ -70,7 +93,64 @@
         <span class="switch-track"></span>
       </label>
     </div>
+    <div class="menu-section-title">표시할 기능</div>
+    <div id="moduleToggleList" class="module-toggle-list"></div>
+    <button id="logoutBtn" class="btn-secondary" style="margin-top:16px; width:100%;">로그아웃</button>
   </nav>
+</div>
+
+<div id="goalEditOverlay" class="modal-overlay" hidden>
+  <div class="modal">
+    <button id="goalEditClose" class="modal-close" aria-label="닫기">×</button>
+    <h3>목표 설정</h3>
+    <div>
+      <label for="goalTitleInput">목표 제목 *</label>
+      <input type="text" id="goalTitleInput" placeholder="예: 자격증 시험 합격">
+    </div>
+    <div style="margin-top:10px;">
+      <label for="goalTargetDateInput">목표일 (선택)</label>
+      <input type="date" id="goalTargetDateInput">
+    </div>
+    <div style="margin-top:10px;">
+      <label for="goalNoteInput">메모 (선택)</label>
+      <textarea id="goalNoteInput" rows="2"></textarea>
+    </div>
+
+    <div class="theme-row" style="margin-top:10px;">
+      <span>매일 행동 리마인더</span>
+      <label class="switch">
+        <input type="checkbox" id="goalBehaviorEnabled">
+        <span class="switch-track"></span>
+      </label>
+    </div>
+    <div id="goalBehaviorFields" class="goal-control checkline" hidden>
+      <input type="time" id="goalBehaviorTime">
+      <select id="goalBehaviorTimezone">
+        <option value="Asia/Seoul">서울 (Asia/Seoul)</option>
+        <option value="Asia/Tokyo">도쿄 (Asia/Tokyo)</option>
+        <option value="America/Los_Angeles">LA (America/Los_Angeles)</option>
+        <option value="America/New_York">뉴욕 (America/New_York)</option>
+        <option value="Europe/London">런던 (Europe/London)</option>
+        <option value="UTC">UTC</option>
+      </select>
+    </div>
+
+    <button id="goalSaveBtn" class="save-btn" style="margin-top:10px;">저장</button>
+
+    <div id="goalEditMilestones" class="goal-edit-milestones" hidden>
+      <h3 style="margin-top:18px;">단계</h3>
+      <div id="milestoneList" class="goal-milestones"></div>
+      <div class="add-event-row">
+        <input type="text" id="newMilestoneText" placeholder="새 단계 추가">
+        <button id="addMilestoneBtn" class="btn-secondary">추가</button>
+      </div>
+      <div class="goal-edit-actions">
+        <button id="goalCompleteBtn" class="btn-secondary">완료로 표시</button>
+        <button id="goalDeleteBtn" class="btn-secondary">목표 삭제</button>
+      </div>
+    </div>
+    <span id="goalStatus" class="save-status"></span>
+  </div>
 </div>
 
 <div id="quickAddOverlay" class="modal-overlay" hidden>
@@ -105,8 +185,41 @@
   </div>
 </div>
 
+<div id="interventionOverlay" class="modal-overlay" hidden>
+  <div class="modal intervention-modal" role="dialog" aria-modal="true" aria-label="오늘의 행동">
+    <button id="interventionClose" class="modal-close" aria-label="닫기">×</button>
+    <div class="intervention-companion">
+      <span id="interventionEmoji" class="intervention-emoji"></span>
+      <p id="interventionMessage" class="intervention-message"></p>
+    </div>
+    <div id="interventionActions" class="intervention-actions">
+      <button id="interventionStartBtn" class="save-btn">시작하기</button>
+      <button id="interventionSnoozeBtn" class="btn-secondary">5분 미루기</button>
+      <button id="interventionSkipBtn" class="btn-secondary">건너뛰기</button>
+    </div>
+    <div id="interventionStartedActions" class="intervention-actions" hidden>
+      <button id="interventionCompleteBtn" class="save-btn">완료했어요</button>
+      <button id="interventionSkipStartedBtn" class="btn-secondary">그만두기</button>
+    </div>
+    <div id="interventionSuccess" class="intervention-success" hidden>
+      <span class="intervention-success-emoji">🎉</span>
+      <p>오늘도 해냈어요!</p>
+    </div>
+    <span id="interventionStatus" class="save-status" aria-live="polite"></span>
+  </div>
+</div>
+
+<!-- api-client.js + capacitor-notification-adapter.js load first so the native
+     notification-action listener registers as early as possible (minimizes the
+     race window on a cold start triggered by tapping a notification action). -->
+<script src="api-client.js"></script>
+<script src="capacitor-notification-adapter.js"></script>
 <script src="pwa.js"></script>
 <script src="menu.js"></script>
+<script src="companion.js"></script>
+<script src="intervention-engine.js"></script>
+<script src="companion-messages.js"></script>
 <script src="home.js"></script>
+<script src="intervention-ui.js"></script>
 </body>
 </html>
