@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "type": "commonjs",
+  "scripts": {
+    "review:import": "node scripts/import-review-problem.mjs"
+  },
   "dependencies": {
     "@vercel/blob": "^2.6.1",
     "express": "^4.19.2"
