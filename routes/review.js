@@ -140,11 +140,42 @@ function validateProblemPayload(body) {
   };
 }
 
+// ---------- request idempotency ----------
+
+const MAX_REQUEST_ID_LEN = 100;
+
+// Validates an optional client-supplied idempotency token. Returns
+// { ok: true, requestId } (requestId may be null when omitted) or
+// { ok: false, error }.
+function readRequestId(payload) {
+  const raw = payload && payload.requestId;
+  if (raw === undefined || raw === null || raw === "") return { ok: true, requestId: null };
+  const id = String(raw).trim();
+  if (!id || id.length > MAX_REQUEST_ID_LEN) {
+    return { ok: false, error: `requestId must be a non-empty string up to ${MAX_REQUEST_ID_LEN} characters` };
+  }
+  return { ok: true, requestId: id };
+}
+
+function findByRequestId(list, requestId) {
+  if (!requestId) return null;
+  for (const item of list) {
+    if (item.requestLog && item.requestLog[requestId]) {
+      return { item, logged: item.requestLog[requestId] };
+    }
+  }
+  return null;
+}
+
 // ---------- shared create-or-bump logic ----------
 
 async function createOrBumpProblem(payload) {
   const result = validateProblemPayload(payload);
   if (!result.valid) return { ok: false, errors: result.errors };
+
+  const requestIdResult = readRequestId(payload);
+  if (!requestIdResult.ok) return { ok: false, errors: [requestIdResult.error] };
+  const requestId = requestIdResult.requestId;
 
   const data = result.data;
   const normalizedQuestion = normalizeQuestion(data.question);
@@ -153,6 +184,14 @@ async function createOrBumpProblem(payload) {
 
   const outcome = await withLock(RESOURCE, async () => {
     const list = await readJSON(RESOURCE, []);
+
+    // Same requestId seen before: replay the recorded outcome verbatim
+    // without touching externalWrongCount again. Protects against retried
+    // Actions runs / network blips resubmitting the identical request.
+    const prior = findByRequestId(list, requestId);
+    if (prior) {
+      return { action: prior.logged.action, item: prior.item, idempotentReplay: true };
+    }
 
     let existing = null;
     if (data.examDate && data.questionNumber != null) {
@@ -169,6 +208,10 @@ async function createOrBumpProblem(payload) {
       existing.lastExternalWrongAt = now;
       existing.updatedAt = now;
       existing.important = existing.externalWrongCount >= 2;
+      if (requestId) {
+        existing.requestLog = existing.requestLog || {};
+        existing.requestLog[requestId] = { action: "duplicate", at: now };
+      }
       await writeJSON(RESOURCE, list);
       return { action: "duplicate", item: existing };
     }
@@ -197,6 +240,7 @@ async function createOrBumpProblem(payload) {
       correctStreak: 0,
       important: false,
       mastered: false,
+      ...(requestId ? { requestLog: { [requestId]: { action: "created", at: now } } } : {}),
     };
     list.push(item);
     await writeJSON(RESOURCE, list);
@@ -265,7 +309,10 @@ router.post("/import", requireImportToken, async (req, res) => {
       success: true,
       action: "created",
       questionId: outcome.item.id,
-      message: "새로운 문제가 등록되었습니다.",
+      idempotentReplay: Boolean(outcome.idempotentReplay),
+      message: outcome.idempotentReplay
+        ? "이미 처리된 요청입니다 (requestId 재사용, 변경 없음)."
+        : "새로운 문제가 등록되었습니다.",
     });
   }
 
@@ -275,9 +322,12 @@ router.post("/import", requireImportToken, async (req, res) => {
     questionId: outcome.item.id,
     externalWrongCount: outcome.item.externalWrongCount,
     important: outcome.item.important,
-    message: `기존 문제의 오답 횟수를 ${outcome.item.externalWrongCount}회로 변경${
-      outcome.item.important ? "하고 중요 문제로 표시했습니다." : "했습니다."
-    }`,
+    idempotentReplay: Boolean(outcome.idempotentReplay),
+    message: outcome.idempotentReplay
+      ? "이미 처리된 요청입니다 (requestId 재사용, 오답 횟수 변경 없음)."
+      : `기존 문제의 오답 횟수를 ${outcome.item.externalWrongCount}회로 변경${
+          outcome.item.important ? "하고 중요 문제로 표시했습니다." : "했습니다."
+        }`,
   });
 });
 

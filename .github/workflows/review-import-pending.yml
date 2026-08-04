@@ -1,0 +1,35 @@
+name: Review Import (pending.json)
+
+# Fires only when review-imports/pending.json changes on the review-import
+# branch. Claude pushes one problem's JSON there after analyzing a
+# screenshot; this workflow validates it, then registers it against the
+# deployed site's POST /api/review/import — from a GitHub-hosted runner,
+# since the Claude Code session itself cannot reach the production domain.
+on:
+  push:
+    branches:
+      - review-import
+    paths:
+      - review-imports/pending.json
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Validate pending.json
+        run: node scripts/validate-review-payload.mjs review-imports/pending.json
+
+      - name: Import review problem
+        env:
+          REVIEW_SITE_URL: ${{ secrets.REVIEW_SITE_URL }}
+          REVIEW_IMPORT_TOKEN: ${{ secrets.REVIEW_IMPORT_TOKEN }}
+        shell: bash
+        run: |
+          set -o pipefail
+          node scripts/import-review-problem.mjs < review-imports/pending.json 2>&1 | tee "$GITHUB_STEP_SUMMARY"
