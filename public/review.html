@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>오답노트 - 내 인생 정리</title>
+<title>문제 복습 - 내 인생 정리</title>
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#4f46e5">
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -17,19 +17,26 @@
     <a href="/calendar.html" class="nav-link">캘린더</a>
     <a href="/diary.html" class="nav-link">일기</a>
     <a href="/history.html" class="nav-link">활동 이력</a>
-    <a href="/wrongnotes.html" class="nav-link active">오답노트</a>
-    <a href="/review.html" class="nav-link">문제 복습</a>
+    <a href="/wrongnotes.html" class="nav-link">오답노트</a>
+    <a href="/review.html" class="nav-link active">문제 복습</a>
   </nav>
 
   <header class="topbar">
-    <h1>오답노트</h1>
-    <p class="hint">틀린 문제를 등록해두고 모아서 다시 풀어보세요.</p>
+    <h1>문제 복습</h1>
+    <p class="hint">틀린 문제를 과목별로 올려두고, 골라서 다시 풀어보세요.</p>
   </header>
 
   <main>
     <section class="card">
       <h2>풀어보기</h2>
-      <div id="quizEmpty" class="hint" hidden>등록된 문제가 없어요. 아래에서 문제를 추가해보세요.</div>
+      <div class="review-filter-row">
+        <label for="subjectFilter">과목</label>
+        <select id="subjectFilter">
+          <option value="">전체</option>
+        </select>
+        <button id="startBtn" class="save-btn">시작하기</button>
+      </div>
+      <div id="quizEmpty" class="hint" hidden>이 과목에는 등록된 문제가 없어요. 아래에서 문제를 추가해보세요.</div>
       <div id="quizArea" hidden>
         <div class="quiz-progress">
           <span id="quizProgress"></span>
@@ -47,7 +54,7 @@
       <div id="quizDone" class="quiz-done" hidden>
         <p id="quizResult"></p>
         <div class="quiz-actions">
-          <button id="quizRetryAll" class="btn-secondary">전체 다시 풀기</button>
+          <button id="quizRetryAll" class="btn-secondary">같은 범위 다시 풀기</button>
           <button id="quizRetryWrong" class="btn-secondary" hidden>틀린 문제만 다시 풀기</button>
         </div>
       </div>
@@ -56,6 +63,11 @@
     <section class="card">
       <h2>문제 추가</h2>
       <div class="activity-form">
+        <div>
+          <label for="fSubject">과목 (선택)</label>
+          <input type="text" id="fSubject" list="subjectList" placeholder="예: 수질오염개론">
+          <datalist id="subjectList"></datalist>
+        </div>
         <div>
           <label for="fSource">출처 (선택)</label>
           <input type="text" id="fSource" placeholder="예: 2021년 09월 12일 기출문제 94번">
@@ -78,7 +90,7 @@
           <textarea id="fExplanation" rows="3" placeholder="풀이 및 해설을 입력하세요"></textarea>
         </div>
       </div>
-      <button id="addBtn" class="save-btn">오답노트에 추가</button>
+      <button id="addBtn" class="save-btn">복습 문제로 추가</button>
       <span id="addStatus" class="save-status"></span>
     </section>
 
@@ -90,6 +102,6 @@
 </div>
 
 <script src="pwa.js"></script>
-<script src="wrongnotes.js"></script>
+<script src="review.js"></script>
 </body>
 </html>

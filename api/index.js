@@ -7,6 +7,7 @@ const activitiesRouter = require("../routes/activities");
 const checklistRouter = require("../routes/checklist");
 const diaryRouter = require("../routes/diary");
 const wrongnotesRouter = require("../routes/wrongnotes");
+const reviewRouter = require("../routes/review");
 
 const app = express();
 app.use(express.json());
@@ -18,6 +19,7 @@ app.use("/api/activities", activitiesRouter);
 app.use("/api/checklist", checklistRouter);
 app.use("/api/diary", diaryRouter);
 app.use("/api/wrongnotes", wrongnotesRouter);
+app.use("/api/review", reviewRouter);
 
 app.use((err, req, res, next) => {
   console.error(err);
